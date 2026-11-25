@@ -15,6 +15,25 @@ public class ConsoleRowLook : LookBase
     {
         RowDefinitions = new RowDefinitions("Auto,Auto,*,Auto");
 
+        // dark fade over the big background art so text stays readable
+        var fade = new Border
+        {
+            IsHitTestVisible = false,
+            Background = new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(0.7, 0, RelativeUnit.Relative),
+                GradientStops = new GradientStops
+                {
+                    new GradientStop(Color.Parse("#F2060A14"), 0),
+                    new GradientStop(Color.Parse("#99060A14"), 0.45),
+                    new GradientStop(Color.Parse("#00060A14"), 1),
+                },
+            },
+        };
+        SetRowSpan(fade, 4);
+        Children.Add(fade);
+
         var bar = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto") };
         var tabs = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(24, 0, 0, 0) };
         tabs.Children.Add(Ui.Pill("Games", "#33FFFFFF", "#FFFFFF", 14));
@@ -29,7 +48,8 @@ public class ConsoleRowLook : LookBase
         var barBox = new Border
         {
             Margin = new Thickness(20), Padding = new Thickness(22, 6),
-            CornerRadius = new CornerRadius(26), Background = Ui.B("#66000000"), Child = bar,
+            CornerRadius = new CornerRadius(26), Background = Ui.B("#88101826"),
+            BorderBrush = Ui.B("#33FFFFFF"), BorderThickness = new Thickness(1), Child = bar,
         };
         SetRow(barBox, 0);
         Children.Add(barBox);
@@ -63,7 +83,7 @@ public class ConsoleRowLook : LookBase
             return;
         }
         var g = Games[Sel];
-        Background = Ui.Grad(g.C1, "#0B0F1A", false);
+        Background = GameLibrary.ArtBrush(g.HeroPath ?? g.CoverPath) ?? Ui.Grad(g.C1, "#0B0F1A", false);
         title.Text = g.Title;
         int start = Math.Max(0, Math.Min(Sel - 2, Games.Length - 6));
         for (int i = start; i < Math.Min(Games.Length, start + 6); i++)

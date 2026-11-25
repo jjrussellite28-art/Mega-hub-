@@ -51,6 +51,7 @@ public static class Ui
             Margin = new Thickness(6),
             VerticalAlignment = VerticalAlignment.Top,
         };
+        if (selected) tile.BoxShadow = BoxShadows.Parse("0 0 28 4 " + glow);
         if (art == null)
         {
             var label = Text(g.Title, 14, true);
