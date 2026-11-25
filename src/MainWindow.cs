@@ -87,7 +87,10 @@ public class MainWindow : Window
         };
         look.OpenSettings = ShowSettings;
         Content = look;
-        hints.Set(("A", "Enter", "Play"), ("◀▶", "←→", "Browse"), ("≡", "S", "Settings"));
+        void BrowseHints() => hints.Set(("A", "Enter", "Open"), ("◀▶▲▼", "Arrows", "Browse"), ("≡", "S", "Settings"));
+        BrowseHints();
+        if (look is ConsoleRowLook crl)
+            crl.MenuChanged = open => { if (open) hints.Set(("A", "Enter", "Choose"), ("B", "Esc", "Close")); else BrowseHints(); };
     }
 
     void ShowSettings()
