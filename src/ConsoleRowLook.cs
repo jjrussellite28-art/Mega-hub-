@@ -191,10 +191,10 @@ public class ConsoleRowLook : LookBase
         var art = GameLibrary.ArtBrush(g.HeroPath ?? g.CoverPath);
         hero.Background = art ?? Ui.Grad(g.C1, "#0B0F1A", false);
         // wide picture: show all of it at the right shape (no stretching, no cropping); the blur fills the rest
-        if (g.HeroPath != null && GameLibrary.ArtBrush(g.HeroPath, Stretch.Fill) is ImageBrush ib && ib.Source != null && Bounds.Width > 0)
+        if (g.HeroPath != null && GameLibrary.ArtBrush(g.HeroPath, Stretch.Fill) is ImageBrush ib && ib.Source is Avalonia.Media.Imaging.Bitmap bm && Bounds.Width > 0)
         {
             heroSharp.Background = ib;
-            heroSharp.Height = Bounds.Width * ib.Source.Size.Height / ib.Source.Size.Width;
+            heroSharp.Height = Bounds.Width * bm.Size.Height / bm.Size.Width;
         }
         else heroSharp.Background = null;
         title.Text = g.Title;
