@@ -55,10 +55,10 @@ public sealed unsafe class SdlPad
             sdl!.GameControllerUpdate();
             if (sdl.GameControllerGetAttached(pad) != SdlBool.True) { sdl.GameControllerClose(pad); pad = null; return false; }
             bool B(GameControllerButton b) => sdl!.GameControllerGetButton(pad, b) != 0;
-            if (B(GameControllerButton.Dpadup)) buttons |= 0x0001;
-            if (B(GameControllerButton.Dpaddown)) buttons |= 0x0002;
-            if (B(GameControllerButton.Dpadleft)) buttons |= 0x0004;
-            if (B(GameControllerButton.Dpadright)) buttons |= 0x0008;
+            if (B(GameControllerButton.DpadUp)) buttons |= 0x0001;
+            if (B(GameControllerButton.DpadDown)) buttons |= 0x0002;
+            if (B(GameControllerButton.DpadLeft)) buttons |= 0x0004;
+            if (B(GameControllerButton.DpadRight)) buttons |= 0x0008;
             if (B(GameControllerButton.Start)) buttons |= 0x0010;
             if (B(GameControllerButton.Back)) buttons |= 0x0020;
             if (B(GameControllerButton.A)) buttons |= 0x1000;
