@@ -97,3 +97,12 @@ Fixed along the way: Program.cs startup, and RollForward=LatestMajor so it runs 
 - Metadata from online (IGDB / SteamGridDB / Steam store): covers, wallpapers, descriptions, also for custom games
 - Tabs (Media, Store, Friends) still only labels
 - Wallpaper: wide art from online sources (Steam 1920x1080 or SteamGridDB, needs free key)
+
+## Wanted (from Jake, CouchHUD-style look, Nov 25) - not built yet. Copy the look, use Mega Hub + name/logo, only real features
+- First-run setup screens like his reference photos: step dots on top, big glowing cards (selected = cyan glow, "Current" badge), big title + one line under it, "Change it later: Settings > ..." note, round A / B / Y buttons and Exit setup at the bottom
+  - Steps: Welcome + language (English only for now), tile shape, wallpaper style, App (Desktop) or Shell mode
+  - Mode screen: App (alongside Windows) vs Shell (as a console) with short bullet lists
+- After setup, restyle the whole app (home, Settings, bar) to match that look
+- Bumpers: LB / RB switch tabs (show LB and RB badges at each end of the tab bar)
+- Bottom button hints all clickable with the mouse/touch (A and B done; add Y = Menu, Power, and any new ones)
+- Home like his photo: tab bar (Favorites, Games, Apps, Downloads, Browser, Settings), Continue playing with the game logo, big poster card, wallpaper behind, bell badge with a count, clock, A Open / Y Menu / Power hints
