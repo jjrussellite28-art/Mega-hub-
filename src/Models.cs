@@ -35,6 +35,8 @@ public class AppSettings
     // false = App mode (normal window). true = Shell mode (full screen, always on top). Switch any time.
     public bool ShellMode { get; set; }
     public bool SetupDone { get; set; }
+    public string? IgdbId { get; set; }
+    public string? IgdbSecret { get; set; }
 
     static string FilePath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),

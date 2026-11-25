@@ -40,6 +40,7 @@ public class SettingsView : Grid, IKeyHandler
     readonly TextBlock status = Ui.Text("", 14, false, "#F5C542");
     bool confirmUninstall;
     bool confirmShell;
+    string? editing;   // "id" or "secret" while typing a code
     int cat, ri;
     bool inRight;
     List<Row> rows = new();
@@ -91,7 +92,11 @@ public class SettingsView : Grid, IKeyHandler
                     try { Directory.CreateDirectory(Addons.Dir); Process.Start(new ProcessStartInfo("explorer.exe", "\"" + Addons.Dir + "\"") { UseShellExecute = true }); }
                     catch (Exception ex) { status.Text = "Could not open the folder: " + ex.Message; Build(); }
                 }));
+                r.Add(new("IGDB Client ID", string.IsNullOrWhiteSpace(s.IgdbId) ? "Not set" : "Set", () => { editing = "id"; Build(); }));
+                r.Add(new("IGDB Secret", string.IsNullOrWhiteSpace(s.IgdbSecret) ? "Not set" : "Set", () => { editing = "secret"; Build(); }));
+                r.Add(new("Test IGDB connection", "", () => { status.Text = "Testing..."; Build(); _ = TestIgdb(); }));
                 foreach (var a in Addons.Scan()) r.Add(new(a.Name, a.Info, null));
+                notes.Add(("IGDB (optional) gives your games wide wallpapers and descriptions. Get a free Client ID and Secret at dev.twitch.tv (log in, Register Your Application, category Application Integration), then paste them here.", "#CCFFFFFF"));
                 notes.Add(("Add-ons: only ones signed by the owner will load. Plugins (Weather, News and more) will be listed here too.", "#CCFFFFFF"));
                 break;
             default:
@@ -206,6 +211,18 @@ public class SettingsView : Grid, IKeyHandler
             n.MaxWidth = 640; n.HorizontalAlignment = HorizontalAlignment.Left;
             n.Margin = new Thickness(4, 6, 0, 0);
             right.Children.Add(n);
+        }
+        if (editing != null)
+        {
+            var isSecret = editing == "secret";
+            var box = new TextBox { Text = isSecret ? s.IgdbSecret : s.IgdbId, Watermark = isSecret ? "Paste the Client Secret, then press Enter" : "Paste the Client ID, then press Enter", FontSize = 17, Margin = new Thickness(0, 12, 0, 0), MaxWidth = 640, HorizontalAlignment = HorizontalAlignment.Left };
+            box.KeyDown += (_, e) =>
+            {
+                if (e.Key == Key.Enter) { if (isSecret) s.IgdbSecret = box.Text?.Trim(); else s.IgdbId = box.Text?.Trim(); s.Save(); editing = null; e.Handled = true; Build(); }
+                else if (e.Key == Key.Escape) { editing = null; e.Handled = true; Build(); }
+            };
+            right.Children.Add(box);
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => box.Focus());
         }
         status.Margin = new Thickness(4, 12, 0, 0);
         status.TextWrapping = TextWrapping.Wrap;
@@ -362,8 +379,15 @@ public class SettingsView : Grid, IKeyHandler
         Environment.Exit(0);
     }
 
+    async System.Threading.Tasks.Task TestIgdb()
+    {
+        var msg = await Igdb.Test();
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => { status.Text = msg; Build(); });
+    }
+
     public void OnKey(Key key)
     {
+        if (editing != null) return;
         if (key == Key.Escape)
         {
             if (confirmShell) { confirmShell = false; Build(); }

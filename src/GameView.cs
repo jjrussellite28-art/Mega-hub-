@@ -77,6 +77,7 @@ public class GameView : Grid, IKeyHandler
         FillInfo(null);
         Focus();
         _ = LoadStoreInfo();
+        _ = LoadIgdb(hero);
         hints.Set(("A", "Enter", "Choose"), ("B", "Esc", "Back"));
     }
 
@@ -202,6 +203,22 @@ public class GameView : Grid, IKeyHandler
             AppLog.Write("game details failed: " + e.Message);
             Avalonia.Threading.Dispatcher.UIThread.Post(() => FillInfo(new Store(null, null, null, null, null)));
         }
+    }
+
+    async System.Threading.Tasks.Task LoadIgdb(Border hero)
+    {
+        var m = await Igdb.GetAsync(g);
+        if (m == null) return;
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (m.ArtFile != null)
+            {
+                var bm = GameLibrary.LoadBitmap(m.ArtFile);
+                var wide = bm != null && bm.Size.Height > 0 && bm.Size.Width / bm.Size.Height is > 1.6 and < 2.0;
+                hero.Background = GameLibrary.ArtBrush(m.ArtFile, wide ? Stretch.Fill : Stretch.UniformToFill);
+            }
+            if (!string.IsNullOrWhiteSpace(m.Summary) && string.IsNullOrWhiteSpace(desc.Text)) desc.Text = m.Summary;
+        });
     }
 
     public void OnKey(Key key)
