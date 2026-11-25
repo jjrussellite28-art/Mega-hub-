@@ -17,6 +17,7 @@ public class SettingsView : Grid, IKeyHandler
         ("Appearance", "\uE790"),
         ("Startup & Modes", "\uE7F4"),
         ("Games", "\uE7FC"),
+        ("Add-ons & Plugins", "\uE710"),
         ("Power", "\uE7E8"),
     };
     static readonly (WallFit v, string name)[] Walls =
@@ -80,6 +81,15 @@ public class SettingsView : Grid, IKeyHandler
                 break;
             case 2:
                 r.Add(new("Games found", GameLibrary.Info, null));
+                break;
+            case 3:
+                r.Add(new("Add your own", "Opens the add-ons folder", () =>
+                {
+                    try { Directory.CreateDirectory(Addons.Dir); Process.Start(new ProcessStartInfo("explorer.exe", "\"" + Addons.Dir + "\"") { UseShellExecute = true }); }
+                    catch (Exception ex) { status.Text = "Could not open the folder: " + ex.Message; Build(); }
+                }));
+                foreach (var a in Addons.Scan()) r.Add(new(a.Name, a.Info, null));
+                notes.Add(("Add-ons: only ones signed by the owner will load. Plugins (Weather, News and more) will be listed here too.", "#CCFFFFFF"));
                 break;
             default:
                 r.Add(new("Update Mega Hub +", "", DoUpdate));
