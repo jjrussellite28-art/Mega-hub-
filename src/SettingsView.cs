@@ -37,6 +37,13 @@ public class SettingsView : Grid, IKeyHandler
         grid.Clear();
         col.Children.Add(Ui.Text("Settings", 34, true));
 
+        col.Children.Add(Section("Wallpaper"));
+        grid.Add(new());
+        var walls = new StackPanel { Orientation = Orientation.Horizontal };
+        foreach (var (w, name) in new[] { (WallFit.Fill, "Fill the screen"), (WallFit.Crop, "Crop to fit"), (WallFit.Fit, "Show whole picture") })
+            walls.Children.Add(Option(name, s.Wall == w, () => { s.Wall = w; s.Save(); Build(); }));
+        col.Children.Add(walls);
+
         col.Children.Add(Section("Tile shape"));
         grid.Add(new());
         var shapes = new StackPanel { Orientation = Orientation.Horizontal };

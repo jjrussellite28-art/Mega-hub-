@@ -188,22 +188,36 @@ public class ConsoleRowLook : LookBase
         }
         var g = Games[Sel];
         Background = Ui.B("#060A14");
-        var art = GameLibrary.ArtBrush(g.HeroPath ?? g.CoverPath);
-        hero.Background = art ?? Ui.Grad(g.C1, "#0B0F1A", false);
-        // below a wide picture: continue its own bottom edge (no ghost copy, no black), softened
-        if (g.HeroPath != null && art is ImageBrush full && full.Source != null)
-            hero.Background = new ImageBrush(full.Source)
-            {
-                Stretch = Stretch.Fill,
-                SourceRect = new RelativeRect(0, 0.90, 1, 0.10, RelativeUnit.Relative),
-            };
-        // wide picture: show all of it at the right shape (no stretching, no cropping); the blur fills the rest
-        if (g.HeroPath != null && GameLibrary.ArtBrush(g.HeroPath, Stretch.Fill) is ImageBrush ib && ib.Source is Avalonia.Media.Imaging.Bitmap bm && Bounds.Width > 0)
+        var path = g.HeroPath ?? g.CoverPath;
+        heroSharp.Background = null;
+        hero.Effect = null;
+        if (S.Wall == WallFit.Fill)
         {
-            heroSharp.Background = ib;
-            heroSharp.Height = Bounds.Width * bm.Size.Height / bm.Size.Width;
+            // stretched to exactly the screen: nothing cut off, no borders, works at any size
+            hero.Background = GameLibrary.ArtBrush(path, Stretch.Fill) ?? Ui.Grad(g.C1, "#0B0F1A", false);
         }
-        else heroSharp.Background = null;
+        else if (S.Wall == WallFit.Crop)
+        {
+            hero.Background = GameLibrary.ArtBrush(path) ?? Ui.Grad(g.C1, "#0B0F1A", false);
+        }
+        else
+        {
+            // whole picture at its own shape, softened bottom edge fills the rest
+            var art = GameLibrary.ArtBrush(path);
+            hero.Background = art ?? Ui.Grad(g.C1, "#0B0F1A", false);
+            hero.Effect = new BlurEffect { Radius = 30 };
+            if (g.HeroPath != null && art is ImageBrush full && full.Source != null)
+                hero.Background = new ImageBrush(full.Source)
+                {
+                    Stretch = Stretch.Fill,
+                    SourceRect = new RelativeRect(0, 0.90, 1, 0.10, RelativeUnit.Relative),
+                };
+            if (g.HeroPath != null && GameLibrary.ArtBrush(g.HeroPath, Stretch.Fill) is ImageBrush ib && ib.Source is Avalonia.Media.Imaging.Bitmap bm && Bounds.Width > 0)
+            {
+                heroSharp.Background = ib;
+                heroSharp.Height = Bounds.Width * bm.Size.Height / bm.Size.Width;
+            }
+        }
         title.Text = g.Title;
 
         int cols = Cols, rows = VisibleRows, selRow = Sel / cols;
