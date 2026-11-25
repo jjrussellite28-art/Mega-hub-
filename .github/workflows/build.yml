@@ -6,6 +6,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -24,7 +27,22 @@ jobs:
           -p:IncludeNativeLibrariesForSelfExtract=true
           -o out
 
+      - name: Build installer
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=0.1.${{ github.run_number }}" installer\MegaHubPlus.iss
+
       - uses: actions/upload-artifact@v4
         with:
-          name: MegaHubPlus-windows
-          path: out/MegaHubPlus.exe
+          name: MegaHubPlus-Setup
+          path: installer-out/MegaHubPlus-Setup.exe
+
+      - name: Publish download link (latest build)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag 2>$null
+          gh release create latest installer-out/MegaHubPlus-Setup.exe --prerelease --title "Mega Hub Plus (latest build)" --notes "Latest automatic build. Unsigned for now, so Windows may warn or block it."

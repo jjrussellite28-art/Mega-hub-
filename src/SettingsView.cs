@@ -125,6 +125,14 @@ public class SettingsView : Grid, IKeyHandler
         bool ownFolder = folderName.Contains("MegaHubPlus", StringComparison.OrdinalIgnoreCase)
                       || folderName.Contains("Mega Hub Plus", StringComparison.OrdinalIgnoreCase);
 
+        // Installed copy: run the real uninstaller (removes program, shortcuts and registry entry).
+        var unins = Path.Combine(baseDir, "unins000.exe");
+        if (!dev && File.Exists(unins))
+        {
+            try { Process.Start(new ProcessStartInfo(unins, "/VERYSILENT") { UseShellExecute = true }); } catch { }
+            Environment.Exit(0);
+        }
+
         confirmUninstall = false;
         if (dev || !ownFolder)
         {
