@@ -191,7 +191,16 @@ public class ConsoleRowLook : LookBase
         var path = g.HeroPath ?? g.CoverPath;
         heroSharp.Background = null;
         hero.Effect = null;
-        if (S.Wall == WallFit.Fill)
+        hero.Margin = new Thickness(0);
+        RenderOptions.SetBitmapInterpolationMode(hero, Avalonia.Media.Imaging.BitmapInterpolationMode.HighQuality);
+        if (S.Wall == WallFit.Cover)
+        {
+            // the poster's own art as a full-screen soft backdrop: always the right shape, matches the cover, any game, any screen
+            hero.Background = GameLibrary.ArtBrush(g.CoverPath ?? g.HeroPath) ?? Ui.Grad(g.C1, "#0B0F1A", false);
+            hero.Effect = new BlurEffect { Radius = 34 };
+            hero.Margin = new Thickness(-90);   // blur edges fall off-screen
+        }
+        else if (S.Wall == WallFit.Fill)
         {
             // stretched to exactly the screen: nothing cut off, no borders, works at any size
             hero.Background = GameLibrary.ArtBrush(path, Stretch.Fill) ?? Ui.Grad(g.C1, "#0B0F1A", false);

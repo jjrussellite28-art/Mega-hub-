@@ -40,7 +40,7 @@ public class SettingsView : Grid, IKeyHandler
         col.Children.Add(Section("Wallpaper"));
         grid.Add(new());
         var walls = new StackPanel { Orientation = Orientation.Horizontal };
-        foreach (var (w, name) in new[] { (WallFit.Fill, "Fill the screen"), (WallFit.Crop, "Crop to fit"), (WallFit.Fit, "Show whole picture") })
+        foreach (var (w, name) in new[] { (WallFit.Cover, "Cover art (blurred)"), (WallFit.Fill, "Fill the screen"), (WallFit.Crop, "Crop to fit"), (WallFit.Fit, "Show whole picture") })
             walls.Children.Add(Option(name, s.Wall == w, () => { s.Wall = w; s.Save(); Build(); }));
         col.Children.Add(walls);
 

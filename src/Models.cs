@@ -3,7 +3,7 @@ using System.Text.Json;
 namespace MegaHubPlus;
 
 public enum LookKind { ConsoleRow, Blades, WideHome }
-public enum WallFit { Fill, Crop, Fit }   // wallpaper: stretch to the screen, crop to the screen, or show whole picture
+public enum WallFit { Cover, Fill, Crop, Fit }   // Cover = the game's cover art, softly blurred, full screen   // wallpaper: stretch to the screen, crop to the screen, or show whole picture
 public enum TileShape { Wide, Short, Poster }   // 16:9, 3:4, 2:3
 
 public record Game(string Title, string C1, string C2, string? AppId = null, string? CoverPath = null, string? HeroPath = null);
@@ -30,7 +30,7 @@ public class AppSettings
 {
     public LookKind? Look { get; set; }
     public TileShape Shape { get; set; } = TileShape.Short;
-    public WallFit Wall { get; set; } = WallFit.Fill;
+    public WallFit Wall { get; set; } = WallFit.Cover;
     // false = App mode (normal window). true = Shell mode (full screen, always on top). Switch any time.
     public bool ShellMode { get; set; }
 
