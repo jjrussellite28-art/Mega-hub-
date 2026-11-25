@@ -16,6 +16,7 @@ public class SettingsView : Grid, IKeyHandler
     readonly StackPanel col = new() { Margin = new Thickness(60, 40) };
     readonly TextBlock status = Ui.Text("", 14, false, "#F5C542");
     bool confirmUninstall;
+    bool confirmShell;
     // controller/keyboard focus: rows of buttons
     readonly List<List<(Border box, Action act)>> grid = new();
     int fr, fc;
@@ -53,12 +54,39 @@ public class SettingsView : Grid, IKeyHandler
         col.Children.Add(Section("Mode"));
         grid.Add(new());
         var modes = new StackPanel { Orientation = Orientation.Horizontal };
-        modes.Children.Add(Option("App mode (window)", !s.ShellMode, () => { s.ShellMode = false; s.Save(); applyMode(); Build(); }));
-        modes.Children.Add(Option("Shell mode (full screen)", s.ShellMode, () => { s.ShellMode = true; s.Save(); applyMode(); Build(); }));
+        modes.Children.Add(Option("Desktop mode (normal Windows)", !s.ShellMode, DesktopMode));
+        modes.Children.Add(Option("Shell mode (replaces desktop)", s.ShellMode, () => { confirmShell = true; confirmUninstall = false; status.Text = ""; Build(); }));
         col.Children.Add(modes);
-        var modeHelp = Ui.Text("Stuck? Press Ctrl+Alt+Q, or hold Back + Start on the controller for 3 seconds.", 13, false, "#CCFFFFFF");
+        var modeHelp = Ui.Text("Stuck? Press Ctrl+Alt+Q, or hold Back + Start on the controller for 3 seconds. You get the normal desktop back.", 13, false, "#CCFFFFFF");
         modeHelp.Margin = new Thickness(4, 4, 0, 0);
         col.Children.Add(modeHelp);
+
+        if (confirmShell)
+        {
+            var warn = new StackPanel();
+            var t = Ui.Text("Shell mode replaces your Windows desktop with Mega Hub + the next time you sign in (no taskbar, no Start menu). Switch back any time with Desktop mode. If Mega Hub + ever closes or crashes, the normal desktop comes back by itself.", 15, true, "#F5C542");
+            t.TextWrapping = TextWrapping.Wrap;
+            t.MaxWidth = 600;
+            warn.Children.Add(t);
+            grid.Add(new());
+            var r = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 0) };
+            r.Children.Add(Option("Yes, make it my shell", false, EnableShell));
+            r.Children.Add(Option("Cancel (B)", false, () => { confirmShell = false; Build(); }));
+            warn.Children.Add(r);
+            col.Children.Add(new Border
+            {
+                Margin = new Thickness(4, 12, 0, 0), Padding = new Thickness(16),
+                Background = Ui.B("#44F5C542"), BorderBrush = Ui.B("#F5C542"), BorderThickness = new Thickness(2),
+                CornerRadius = new CornerRadius(12), HorizontalAlignment = HorizontalAlignment.Left, Child = warn,
+            });
+        }
+        if (s.ShellMode && ShellControl.IsRegistered && ShellControl.ExplorerRunning())
+        {
+            grid.Add(new());
+            var so = new StackPanel { Orientation = Orientation.Horizontal };
+            so.Children.Add(Option("Sign out now to start Shell mode", false, ShellControl.SignOut));
+            col.Children.Add(so);
+        }
 
         col.Children.Add(Section("Games"));
         var info = Ui.Text(GameLibrary.Games.Length >= 0 ? GameLibrary.Info : "", 14, false, "#CCFFFFFF");
@@ -108,6 +136,30 @@ public class SettingsView : Grid, IKeyHandler
 
     bool updating;
 
+    void DesktopMode()
+    {
+        confirmShell = false;
+        ShellControl.Disable();
+        if (!ShellControl.ExplorerRunning()) ShellControl.StartExplorer();
+        s.ShellMode = false; s.Save(); applyMode();
+        status.Text = "Desktop mode is on. Windows will start normally.";
+        Build();
+    }
+
+    void EnableShell()
+    {
+        confirmShell = false;
+        if (!ShellControl.Enable())
+        {
+            status.Text = "Shell mode can only be turned on from the installed copy of Mega Hub +.";
+            Build();
+            return;
+        }
+        s.ShellMode = true; s.Save(); applyMode();
+        status.Text = "Shell mode is set. It starts the next time you sign in.";
+        Build();
+    }
+
     // Downloads the newest installer from GitHub, runs it quietly, and closes this app so it can be replaced.
     void DoUpdate()
     {
@@ -131,6 +183,7 @@ public class SettingsView : Grid, IKeyHandler
                 Avalonia.Threading.Dispatcher.UIThread.Post(() => { status.Text = "Installing the update. Mega Hub + will restart."; Build(); });
                 await System.Threading.Tasks.Task.Delay(800);
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(file, "/SILENT /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS") { UseShellExecute = true });
+                ShellControl.SkipRestore = true;
                 Environment.Exit(0);
             }
             catch (Exception ex)
@@ -144,6 +197,8 @@ public class SettingsView : Grid, IKeyHandler
     // (never a developer build, and only a folder that is clearly Mega Hub +'s own).
     void DoUninstall()
     {
+        ShellControl.Disable();
+        if (!ShellControl.ExplorerRunning()) ShellControl.StartExplorer();
         try
         {
             var data = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MegaHubPlus");
@@ -224,6 +279,7 @@ public class SettingsView : Grid, IKeyHandler
 
     public void OnKey(Key key)
     {
+        if (key == Key.Escape && confirmShell) { confirmShell = false; Build(); return; }
         if (key == Key.Escape) { if (confirmUninstall) { confirmUninstall = false; Build(); } else back(); return; }
         if (key == Key.Up && fr > 0) fr--;
         else if (key == Key.Down && fr < grid.Count - 1) fr++;

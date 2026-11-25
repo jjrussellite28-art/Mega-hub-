@@ -64,7 +64,8 @@ public class MainWindow : Window
         Topmost = st.ShellMode;
         if (!st.ShellMode) { WindowState = WindowState.Normal; return; }
         // shell mode goes on the screen that is NOT the main one (if there is one), so the desktop stays usable
-        var target = Screens.All.FirstOrDefault(sc => !sc.IsPrimary) ?? Screens.Primary;
+        // real shell (no Explorer running) = main screen; preview before sign-out = the other screen
+        var target = ShellControl.ExplorerRunning() ? (Screens.All.FirstOrDefault(sc => !sc.IsPrimary) ?? Screens.Primary) : Screens.Primary;
         if (target != null)
         {
             WindowState = WindowState.Normal;

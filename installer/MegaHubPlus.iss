@@ -37,3 +37,7 @@ Filename: "{app}\MegaHubPlus.exe"; Description: "Start {#AppName}"; Flags: nowai
 [UninstallDelete]
 ; remove everything Mega Hub + saved, so no trace is left
 Type: filesandordirs; Name: "{userappdata}\MegaHubPlus"
+
+[UninstallRun]
+; make sure the normal Windows desktop is restored if Shell mode was on
+Filename: "{sys}\reg.exe"; Parameters: "delete ""HKCU\Software\Microsoft\Windows NT\CurrentVersion\Winlogon"" /v Shell /f"; Flags: runhidden; RunOnceId: "RestoreShell"

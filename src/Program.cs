@@ -18,7 +18,7 @@ class Program
         void Log(string m) { try { File.AppendAllText(log, DateTime.Now.ToString("HH:mm:ss ") + m + "\n"); } catch { } }
         Log("start");
         AppDomain.CurrentDomain.UnhandledException += (_, e) => Log("unhandled: " + e.ExceptionObject);
-        AppDomain.CurrentDomain.ProcessExit += (_, _) => Log("exit\n" + Environment.StackTrace);
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => { Log("exit\n" + Environment.StackTrace); ShellControl.RestoreDesktopIfNeeded(); };
         try
         {
             BuildAvaloniaApp().SetupWithLifetime(lifetime);
@@ -27,6 +27,7 @@ class Program
         catch (Exception e)
         {
             try { File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), "..", "crash.log"), e.ToString()); } catch { }
+            ShellControl.RestoreDesktopIfNeeded();
         }
     }
 
