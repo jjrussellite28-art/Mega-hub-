@@ -7,132 +7,199 @@ using Avalonia.Media;
 
 namespace MegaHubPlus;
 
-// Settings tab: look, tile shape, and Power (Update, Uninstall). Buttons are here for now and may move later.
+// Settings: categories on the left, the rows for the chosen category on the right.
 public class SettingsView : Grid, IKeyHandler
 {
+    record Row(string Label, string Value, Action? Act);
+
+    static readonly (string name, string icon)[] Cats =
+    {
+        ("Appearance", "\uE790"),
+        ("Startup & Modes", "\uE7F4"),
+        ("Games", "\uE7FC"),
+        ("Power", "\uE7E8"),
+    };
+    static readonly (WallFit v, string name)[] Walls =
+    {
+        (WallFit.Fill, "Fill the screen"), (WallFit.Crop, "Crop to fit"),
+        (WallFit.Fit, "Show whole picture"), (WallFit.Cover, "Cover art (blurred)"),
+    };
+    static readonly (TileShape v, string name)[] Shapes =
+    {
+        (TileShape.Wide, "Wide 16:9"), (TileShape.Short, "Short 3:4"), (TileShape.Poster, "Tall poster 2:3"),
+    };
+    const string Icons = "Segoe Fluent Icons, Segoe MDL2 Assets";
+
     readonly AppSettings s;
     readonly Action back;
     readonly Action applyMode;
-    readonly StackPanel col = new() { Margin = new Thickness(60, 40) };
     readonly TextBlock status = Ui.Text("", 14, false, "#F5C542");
     bool confirmUninstall;
     bool confirmShell;
-    // controller/keyboard focus: rows of buttons
-    readonly List<List<(Border box, Action act)>> grid = new();
-    int fr, fc;
+    int cat, ri;
+    bool inRight;
+    List<Row> rows = new();
 
     public SettingsView(AppSettings s, Action back, Action applyMode)
     {
         this.s = s;
         this.back = back;
         this.applyMode = applyMode;
-        Background = Ui.Grad("#0B0F1A", "#1A1030");
-        Children.Add(col);
+        Background = Ui.Grad("#080C18", "#0A2460");
         Build();
+    }
+
+    List<Row> RowsFor(int c, List<(string text, string color)> notes)
+    {
+        var r = new List<Row>();
+        switch (c)
+        {
+            case 0:
+                var wi = Array.FindIndex(Walls, w => w.v == s.Wall);
+                r.Add(new("Wallpaper", Walls[Math.Max(wi, 0)].name, () => { s.Wall = Walls[(Math.Max(wi, 0) + 1) % Walls.Length].v; s.Save(); Build(); }));
+                var si = Array.FindIndex(Shapes, w => w.v == s.Shape);
+                r.Add(new("Tile shape", Shapes[Math.Max(si, 0)].name, () => { s.Shape = Shapes[(Math.Max(si, 0) + 1) % Shapes.Length].v; s.Save(); Build(); }));
+                notes.Add(("Press A on a row to switch to the next choice.", "#CCFFFFFF"));
+                break;
+            case 1:
+                if (confirmShell)
+                {
+                    notes.Add(("Shell mode replaces your Windows desktop with Mega Hub + the next time you sign in (no taskbar, no Start menu). Switch back any time with Desktop mode. If Mega Hub + ever closes or crashes, the normal desktop comes back by itself.", "#F5C542"));
+                    r.Add(new("Yes, make it my shell", "", EnableShell));
+                    r.Add(new("Cancel", "", () => { confirmShell = false; Build(); }));
+                }
+                else
+                {
+                    r.Add(new("Desktop mode (normal Windows)", s.ShellMode ? "" : "On", DesktopMode));
+                    r.Add(new("Shell mode (replaces desktop)", s.ShellMode ? "On" : "Off", () => { confirmShell = true; confirmUninstall = false; status.Text = ""; Build(); }));
+                    if (s.ShellMode && ShellControl.IsRegistered && ShellControl.ExplorerRunning())
+                        r.Add(new("Sign out now to start Shell mode", "", ShellControl.SignOut));
+                    notes.Add(("Stuck? Press Ctrl+Alt+Q, or hold Back + Start on the controller for 3 seconds. You get the normal desktop back.", "#CCFFFFFF"));
+                }
+                break;
+            case 2:
+                r.Add(new("Games found", GameLibrary.Info, null));
+                break;
+            default:
+                r.Add(new("Update Mega Hub +", "", DoUpdate));
+                r.Add(new("Copy log", "", () => { _ = CopyLog(); }));
+                r.Add(new("Quit Mega Hub +", "", () => Environment.Exit(0)));
+                if (confirmUninstall)
+                {
+                    notes.Add(("WARNING: this removes Mega Hub + and everything it saved. Everything. Nothing is left behind.", "#FF8A8A"));
+                    r.Add(new("Yes, remove everything", "", DoUninstall));
+                    r.Add(new("Cancel", "", () => { confirmUninstall = false; Build(); }));
+                }
+                else r.Add(new("Uninstall...", "", () => { confirmUninstall = true; status.Text = ""; Build(); }));
+                break;
+        }
+        return r;
     }
 
     void Build()
     {
-        col.Children.Clear();
-        grid.Clear();
-        col.Children.Add(Ui.Text("Settings", 34, true));
+        (status.Parent as Panel)?.Children.Remove(status);
+        Children.Clear();
+        RowDefinitions.Clear();
+        RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+        RowDefinitions.Add(new RowDefinition(GridLength.Star));
 
-        col.Children.Add(Section("Wallpaper"));
-        grid.Add(new());
-        var walls = new StackPanel { Orientation = Orientation.Horizontal };
-        foreach (var (w, name) in new[] { (WallFit.Fill, "Fill the screen"), (WallFit.Crop, "Crop to fit"), (WallFit.Fit, "Show whole picture"), (WallFit.Cover, "Cover art (blurred)") })
-            walls.Children.Add(Option(name, s.Wall == w, () => { s.Wall = w; s.Save(); Build(); }));
-        col.Children.Add(walls);
-
-        col.Children.Add(Section("Tile shape"));
-        grid.Add(new());
-        var shapes = new StackPanel { Orientation = Orientation.Horizontal };
-        foreach (var (shape, name) in new[] { (TileShape.Wide, "Wide 16:9"), (TileShape.Short, "Short 3:4"), (TileShape.Poster, "Tall poster 2:3") })
-            shapes.Children.Add(Option(name, s.Shape == shape, () => { s.Shape = shape; s.Save(); Build(); }));
-        col.Children.Add(shapes);
-
-        col.Children.Add(Section("Mode"));
-        grid.Add(new());
-        var modes = new StackPanel { Orientation = Orientation.Horizontal };
-        modes.Children.Add(Option("Desktop mode (normal Windows)", !s.ShellMode, DesktopMode));
-        modes.Children.Add(Option("Shell mode (replaces desktop)", s.ShellMode, () => { confirmShell = true; confirmUninstall = false; status.Text = ""; Build(); }));
-        col.Children.Add(modes);
-        var modeHelp = Ui.Text("Stuck? Press Ctrl+Alt+Q, or hold Back + Start on the controller for 3 seconds. You get the normal desktop back.", 13, false, "#CCFFFFFF");
-        modeHelp.Margin = new Thickness(4, 4, 0, 0);
-        col.Children.Add(modeHelp);
-
-        if (confirmShell)
+        // top bar
+        var bar = new Border
         {
-            var warn = new StackPanel();
-            var t = Ui.Text("Shell mode replaces your Windows desktop with Mega Hub + the next time you sign in (no taskbar, no Start menu). Switch back any time with Desktop mode. If Mega Hub + ever closes or crashes, the normal desktop comes back by itself.", 15, true, "#F5C542");
-            t.TextWrapping = TextWrapping.Wrap;
-            t.MaxWidth = 600;
-            warn.Children.Add(t);
-            grid.Add(new());
-            var r = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 0) };
-            r.Children.Add(Option("Yes, make it my shell", false, EnableShell));
-            r.Children.Add(Option("Cancel (B)", false, () => { confirmShell = false; Build(); }));
-            warn.Children.Add(r);
-            col.Children.Add(new Border
+            Margin = new Thickness(24, 20, 24, 0), Padding = new Thickness(22, 12),
+            Background = Ui.B("#331A2A4A"), BorderBrush = Ui.B("#33FFFFFF"), BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(26),
+        };
+        var barRow = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+        barRow.Children.Add(Ui.Text("Mega Hub +", 20, true));
+        var clock = Ui.Clock(); clock.FontSize = 24; Grid.SetColumn(clock, 1);
+        barRow.Children.Add(clock);
+        bar.Child = barRow;
+        Children.Add(bar);
+
+        var body = new Grid { Margin = new Thickness(40, 20, 40, 60), ColumnDefinitions = new ColumnDefinitions("340,*"), RowDefinitions = new RowDefinitions("Auto,*") };
+        Grid.SetRow(body, 1);
+        Children.Add(body);
+
+        var title = Ui.Text("Settings", 34, true);
+        title.Margin = new Thickness(0, 0, 0, 14);
+        Grid.SetColumnSpan(title, 2);
+        body.Children.Add(title);
+
+        // left: categories
+        var left = new StackPanel { Margin = new Thickness(0, 0, 18, 0) };
+        for (int i = 0; i < Cats.Length; i++)
+        {
+            int idx = i;
+            bool sel = i == cat;
+            var line = new StackPanel { Orientation = Orientation.Horizontal };
+            line.Children.Add(new TextBlock { Text = Cats[i].icon, FontFamily = new FontFamily(Icons), FontSize = 22, Foreground = Brushes.White, Width = 44, VerticalAlignment = VerticalAlignment.Center });
+            line.Children.Add(Ui.Text(Cats[i].name, 17, sel));
+            var item = new Border
             {
-                Margin = new Thickness(4, 12, 0, 0), Padding = new Thickness(16),
-                Background = Ui.B("#44F5C542"), BorderBrush = Ui.B("#F5C542"), BorderThickness = new Thickness(2),
-                CornerRadius = new CornerRadius(12), HorizontalAlignment = HorizontalAlignment.Left, Child = warn,
-            });
+                Padding = new Thickness(18, 16), Margin = new Thickness(0, 0, 0, 4), CornerRadius = new CornerRadius(8),
+                Background = Ui.B(sel ? (inRight ? "#22FFFFFF" : "#44408CFF") : "#00000000"),
+                BorderBrush = Ui.B(sel && !inRight ? "#4C8DFF" : "#00000000"), BorderThickness = new Thickness(sel ? 2 : 0),
+                Child = line,
+            };
+            item.PointerPressed += (_, _) => { cat = idx; ri = 0; inRight = false; Build(); };
+            left.Children.Add(item);
         }
-        if (s.ShellMode && ShellControl.IsRegistered && ShellControl.ExplorerRunning())
-        {
-            grid.Add(new());
-            var so = new StackPanel { Orientation = Orientation.Horizontal };
-            so.Children.Add(Option("Sign out now to start Shell mode", false, ShellControl.SignOut));
-            col.Children.Add(so);
-        }
+        var leftBox = new Border { Background = Ui.B("#22101A33"), CornerRadius = new CornerRadius(14), Padding = new Thickness(8), VerticalAlignment = VerticalAlignment.Top, Child = left };
+        Grid.SetRow(leftBox, 1);
+        body.Children.Add(leftBox);
 
-        col.Children.Add(Section("Games"));
-        var info = Ui.Text(GameLibrary.Games.Length >= 0 ? GameLibrary.Info : "", 14, false, "#CCFFFFFF");
-        info.Margin = new Thickness(4, 0, 0, 0);
-        col.Children.Add(info);
-
-        col.Children.Add(Section("Power"));
-        grid.Add(new());
-        var power = new StackPanel { Orientation = Orientation.Horizontal };
-        power.Children.Add(Option("Update Mega Hub +", false, () =>
+        // right: rows of the chosen category
+        var notes = new List<(string text, string color)>();
+        rows = RowsFor(cat, notes);
+        ri = Math.Clamp(ri, 0, Math.Max(rows.Count - 1, 0));
+        var right = new StackPanel();
+        right.Children.Add(Ui.Text(Cats[cat].name, 24, true));
+        ((TextBlock)right.Children[0]).Margin = new Thickness(0, 0, 0, 12);
+        for (int i = 0; i < rows.Count; i++)
         {
-            DoUpdate();
-        }));
-        power.Children.Add(Option("Copy log", false, () => { _ = CopyLog(); }));
-        power.Children.Add(Option("Quit Mega Hub +", false, () => Environment.Exit(0)));
-        power.Children.Add(Option("Uninstall...", false, () => { confirmUninstall = true; status.Text = ""; Build(); }));
-        col.Children.Add(power);
-
-        if (confirmUninstall)
-        {
-            var warn = new StackPanel();
-            var t = Ui.Text("WARNING: this removes Mega Hub + and everything it saved. Everything. Nothing is left behind.", 15, true, "#FF8A8A");
-            t.TextWrapping = TextWrapping.Wrap;
-            t.MaxWidth = 560;
-            warn.Children.Add(t);
-            grid.Add(new());
-            var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 0) };
-            row.Children.Add(Option("Yes, remove everything", false, DoUninstall));
-            row.Children.Add(Option("Cancel", false, () => { confirmUninstall = false; Build(); }));
-            warn.Children.Add(row);
-            col.Children.Add(new Border
+            int idx = i;
+            var row = rows[i];
+            bool f = inRight && i == ri;
+            var g = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto") };
+            g.Children.Add(Ui.Text(row.Label, 17));
+            var val = Ui.Text(row.Value, 16, false, "#CCFFFFFF");
+            val.Margin = new Thickness(12, 0, 8, 0);
+            Grid.SetColumn(val, 1);
+            g.Children.Add(val);
+            if (row.Act != null)
             {
-                Margin = new Thickness(4, 12, 0, 0), Padding = new Thickness(16),
-                Background = Ui.B("#44FF4040"), BorderBrush = Ui.B("#FF6060"), BorderThickness = new Thickness(2),
-                CornerRadius = new CornerRadius(12), HorizontalAlignment = HorizontalAlignment.Left, Child = warn,
-            });
+                var chev = Ui.Text("\u203A", 26, false);
+                Grid.SetColumn(chev, 2);
+                g.Children.Add(chev);
+            }
+            var rb = new Border
+            {
+                Padding = new Thickness(22, 14), Margin = new Thickness(0, 0, 0, 8), CornerRadius = new CornerRadius(10),
+                Background = Ui.B(f ? "#33408CFF" : "#22FFFFFF"),
+                BorderBrush = Ui.B(f ? "#4C8DFF" : "#00000000"), BorderThickness = new Thickness(2),
+                Child = g,
+            };
+            if (f) rb.BoxShadow = BoxShadows.Parse("0 0 18 1 #664C8DFF");
+            rb.PointerPressed += (_, _) => { inRight = true; ri = idx; row.Act?.Invoke(); if (row.Act == null) Build(); };
+            right.Children.Add(rb);
         }
-
+        foreach (var (text, color) in notes)
+        {
+            var n = Ui.Text(text, 14, false, color);
+            n.TextWrapping = TextWrapping.Wrap;
+            n.MaxWidth = 640;
+            n.Margin = new Thickness(4, 6, 0, 0);
+            right.Children.Add(n);
+        }
         status.Margin = new Thickness(4, 12, 0, 0);
-        col.Children.Add(status);
-
-        grid.Add(new());
-        var done = Option("Back to home  (B / Esc)", false, back);
-        done.Margin = new Thickness(4, 30, 0, 0);
-        col.Children.Add(done);
-        ApplyFocus();
+        status.TextWrapping = TextWrapping.Wrap;
+        right.Children.Add(status);
+        var scroll = new ScrollViewer { Content = right, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto };
+        Grid.SetColumn(scroll, 1);
+        Grid.SetRow(scroll, 1);
+        body.Children.Add(scroll);
     }
 
     bool updating;
@@ -281,54 +348,29 @@ public class SettingsView : Grid, IKeyHandler
         Environment.Exit(0);
     }
 
-    static Control Section(string t)
-    {
-        var tb = Ui.Text(t, 18, true, "#3FE0D0");
-        tb.Margin = new Thickness(0, 28, 0, 8);
-        return tb;
-    }
-
-    Border Option(string text, bool on, Action click)
-    {
-        var b = new Border
-        {
-            Background = Ui.B(on ? "#553FE0D0" : "#33FFFFFF"),
-            BorderBrush = Ui.B(on ? "#3FE0D0" : "#33FFFFFF"),
-            BorderThickness = new Thickness(2),
-            CornerRadius = new CornerRadius(12),
-            Padding = new Thickness(22, 12),
-            Margin = new Thickness(4),
-            HorizontalAlignment = HorizontalAlignment.Left,
-            Child = Ui.Text(text, 15, true),
-        };
-        b.PointerPressed += (_, _) => click();
-        grid[^1].Add((b, click));
-        return b;
-    }
-
-    void ApplyFocus()
-    {
-        fr = Math.Clamp(fr, 0, grid.Count - 1);
-        fc = Math.Clamp(fc, 0, grid[fr].Count - 1);
-        for (int i = 0; i < grid.Count; i++)
-            for (int j = 0; j < grid[i].Count; j++)
-            {
-                var b = grid[i][j].box;
-                bool f = i == fr && j == fc;
-                b.BorderBrush = f ? Brushes.White : b.BorderBrush;
-                if (f) b.BorderThickness = new Thickness(3);
-            }
-    }
-
     public void OnKey(Key key)
     {
-        if (key == Key.Escape && confirmShell) { confirmShell = false; Build(); return; }
-        if (key == Key.Escape) { if (confirmUninstall) { confirmUninstall = false; Build(); } else back(); return; }
-        if (key == Key.Up && fr > 0) fr--;
-        else if (key == Key.Down && fr < grid.Count - 1) fr++;
-        else if (key == Key.Left && fc > 0) fc--;
-        else if (key == Key.Right && fc < grid[fr].Count - 1) fc++;
-        else if (key == Key.Enter || key == Key.Space) { grid[fr][fc].act(); return; }
+        if (key == Key.Escape)
+        {
+            if (confirmShell) { confirmShell = false; Build(); }
+            else if (confirmUninstall) { confirmUninstall = false; Build(); }
+            else if (inRight) { inRight = false; Build(); }
+            else back();
+            return;
+        }
+        if (!inRight)
+        {
+            if (key == Key.Up && cat > 0) { cat--; ri = 0; }
+            else if (key == Key.Down && cat < Cats.Length - 1) { cat++; ri = 0; }
+            else if ((key == Key.Right || key == Key.Enter || key == Key.Space) && rows.Count > 0) { inRight = true; ri = 0; }
+            else return;
+            Build();
+            return;
+        }
+        if (key == Key.Up && ri > 0) ri--;
+        else if (key == Key.Down && ri < rows.Count - 1) ri++;
+        else if (key == Key.Left) inRight = false;
+        else if (key == Key.Enter || key == Key.Space) { rows[ri].Act?.Invoke(); return; }
         else return;
         Build();
     }
