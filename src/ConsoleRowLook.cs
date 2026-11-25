@@ -26,7 +26,7 @@ public class ConsoleRowLook : LookBase
 
         // big game art fills the whole screen; a dark fade keeps the text readable
         hero.IsHitTestVisible = false;
-        hero.Effect = new BlurEffect { Radius = 40 };
+        hero.Effect = new BlurEffect { Radius = 30 };
         SetRowSpan(hero, 3);
         Children.Add(hero);
         var dim = new Border { IsHitTestVisible = false, Background = Ui.B("#66060A14") };
@@ -190,6 +190,13 @@ public class ConsoleRowLook : LookBase
         Background = Ui.B("#060A14");
         var art = GameLibrary.ArtBrush(g.HeroPath ?? g.CoverPath);
         hero.Background = art ?? Ui.Grad(g.C1, "#0B0F1A", false);
+        // below a wide picture: continue its own bottom edge (no ghost copy, no black), softened
+        if (g.HeroPath != null && art is ImageBrush full && full.Source != null)
+            hero.Background = new ImageBrush(full.Source)
+            {
+                Stretch = Stretch.Fill,
+                SourceRect = new RelativeRect(0, 0.90, 1, 0.10, RelativeUnit.Relative),
+            };
         // wide picture: show all of it at the right shape (no stretching, no cropping); the blur fills the rest
         if (g.HeroPath != null && GameLibrary.ArtBrush(g.HeroPath, Stretch.Fill) is ImageBrush ib && ib.Source is Avalonia.Media.Imaging.Bitmap bm && Bounds.Width > 0)
         {
