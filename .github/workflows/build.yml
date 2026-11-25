@@ -46,14 +46,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh release delete latest --yes --cleanup-tag --repo "${{ github.repository }}"
 
-      - name: Publish download link (latest build)
+      - name: Attach installer to the latest release
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         continue-on-error: true
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: latest
-          target_commitish: ${{ github.sha }}
-          name: Mega Hub Plus (latest build)
-          prerelease: true
-          body: Latest automatic build. Unsigned for now, so Windows may warn or block it.
-          files: installer-out/MegaHubPlus-Setup.exe
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la installer-out || true
+          set +e
+          out=$(gh release upload latest installer-out/MegaHubPlus-Setup.exe --clobber --repo "${{ github.repository }}" 2>&1)
+          code=$?
+          echo "::warning title=release-upload::exit=$code $(echo "$out" | tr '\n' ' ' | cut -c1-400)"
+          exit $code
