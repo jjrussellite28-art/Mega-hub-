@@ -60,7 +60,7 @@ public class HintBar : Border
             var xbox = lastKind == "Xbox" || !lastPad;
             var badge = new Border
             {
-                Background = Ui.B(xbox && h.pad == "A" ? "#2FB457" : xbox && h.pad == "B" ? "#D9453F" : "#FFFFFF"),
+                Background = Ui.B(xbox && h.pad == "A" ? "#2FB457" : xbox && h.pad == "B" ? "#D9453F" : xbox && h.pad == "Y" ? "#E6C229" : "#FFFFFF"),
                 CornerRadius = new CornerRadius(g.Length == 1 ? 14 : 8),
                 MinWidth = 28, Height = 28, Padding = new Thickness(7, 0),
                 VerticalAlignment = VerticalAlignment.Center,
@@ -71,9 +71,9 @@ public class HintBar : Border
             var item = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 18, 0), Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand) };
             item.Children.Add(badge);
             item.Children.Add(label);
-            if (h.pad == "A" || h.pad == "B")
+            if (h.pad == "A" || h.pad == "B" || h.pad == "Y" || h.pad == "≡")
             {
-                var key = h.pad == "A" ? Avalonia.Input.Key.Enter : Avalonia.Input.Key.Escape;
+                var key = h.pad == "A" ? Avalonia.Input.Key.Enter : h.pad == "B" ? Avalonia.Input.Key.Escape : h.pad == "Y" ? Avalonia.Input.Key.Y : Avalonia.Input.Key.S;
                 item.PointerPressed += (_, _) => press?.Invoke(key);
             }
             items.Children.Add(item);

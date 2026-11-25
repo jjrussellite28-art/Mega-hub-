@@ -36,6 +36,7 @@ public class SettingsView : Grid, IKeyHandler
     readonly AppSettings s;
     readonly Action back;
     readonly Action applyMode;
+    readonly Action? runSetup;
     readonly TextBlock status = Ui.Text("", 14, false, "#F5C542");
     bool confirmUninstall;
     bool confirmShell;
@@ -43,8 +44,9 @@ public class SettingsView : Grid, IKeyHandler
     bool inRight;
     List<Row> rows = new();
 
-    public SettingsView(AppSettings s, Action back, Action applyMode)
+    public SettingsView(AppSettings s, Action back, Action applyMode, Action? runSetup = null)
     {
+        this.runSetup = runSetup;
         this.s = s;
         this.back = back;
         this.applyMode = applyMode;
@@ -72,6 +74,7 @@ public class SettingsView : Grid, IKeyHandler
                 }
                 else
                 {
+                    if (runSetup != null) r.Add(new("Setup assistant", "Run the first-time setup again", runSetup));
                     r.Add(new("Desktop mode (normal Windows)", s.ShellMode ? "" : "On", DesktopMode));
                     r.Add(new("Shell mode (replaces desktop)", s.ShellMode ? "On" : "Off", () => { confirmShell = true; confirmUninstall = false; status.Text = ""; Build(); }));
                     if (s.ShellMode && ShellControl.IsRegistered && ShellControl.ExplorerRunning())

@@ -63,6 +63,7 @@ public sealed unsafe class SdlPad
             if (B(GameControllerButton.Back)) buttons |= 0x0020;
             if (B(GameControllerButton.A)) buttons |= 0x1000;
             if (B(GameControllerButton.B)) buttons |= 0x2000;
+            if (B(GameControllerButton.Y)) buttons |= 0x8000;
             lx = sdl.GameControllerGetAxis(pad, GameControllerAxis.Leftx);
             return true;
         }

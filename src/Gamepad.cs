@@ -76,6 +76,7 @@ public class Gamepad
         if ((down & 0x1000) != 0) press(Key.Enter);  // A
         if ((down & 0x2000) != 0) press(Key.Escape); // B
         if ((down & 0x0010) != 0) press(Key.S);      // Start
+        if ((down & 0x8000) != 0) press(Key.Y);      // Y
 
         int dir = s.LX < -16000 ? -1 : s.LX > 16000 ? 1 : 0;
         if (dir == 0) { stickDir = 0; return; }

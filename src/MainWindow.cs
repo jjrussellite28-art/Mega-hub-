@@ -38,6 +38,7 @@ public class MainWindow : Window
         };
         ApplyMode();
         if (Startup.SafeMode) ShowSafe();
+        else if (!st.SetupDone) ShowSetup();
         else ShowLook();
     }
 
@@ -86,9 +87,14 @@ public class MainWindow : Window
             crl.MenuChanged = open => { if (open) hints.Set(("A", "Enter", "Choose"), ("B", "Esc", "Close")); else BrowseHints(); };
     }
 
+    void ShowSetup()
+    {
+        Content = new SetupView(st, ApplyMode, ShowLook, hints);
+    }
+
     void ShowSettings()
     {
-        Content = new SettingsView(st, ShowLook, ApplyMode);
+        Content = new SettingsView(st, ShowLook, ApplyMode, ShowSetup);
         hints.Set(("A", "Enter", "Select"), ("B", "Esc", "Back"));
     }
 
