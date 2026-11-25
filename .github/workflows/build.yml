@@ -55,6 +55,7 @@ jobs:
         run: |
           ls -la installer-out || true
           set +e
+          gh release create latest --prerelease --target "${{ github.sha }}" --title "Mega Hub Plus (latest build)" --notes "Latest automatic build. Unsigned for now, so Windows may warn or block it." --repo "${{ github.repository }}" 2>&1 | tr '\n' ' ' | cut -c1-300
           out=$(gh release upload latest installer-out/MegaHubPlus-Setup.exe --clobber --repo "${{ github.repository }}" 2>&1)
           code=$?
           echo "::warning title=release-upload::exit=$code $(echo "$out" | tr '\n' ' ' | cut -c1-400)"
