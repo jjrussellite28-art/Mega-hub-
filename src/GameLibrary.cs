@@ -20,7 +20,7 @@ public static class GameLibrary
         new[] { "#5A0F18", "#E0603A" }, new[] { "#10394F", "#40C0D0" }, new[] { "#3A2A10", "#E0B040" },
     };
 
-    static string? SteamPath()
+    public static string? SteamPath()
     {
         try
         {

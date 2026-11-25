@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -119,11 +120,42 @@ public class GameView : Grid, IKeyHandler
         info.Children.Add(grid);
     }
 
-    record Store(string? Desc, string? Dev, string? Pub, string? Date, string? Genres);
+    record Store(string? Desc, string? Dev, string? Pub, string? Date, string? Genres, string? Esrb = null);
+
+    // last played and play time come from Steam's own file for the signed-in account
+    (DateTime? last, int minutes) PlayInfo()
+    {
+        try
+        {
+            var steam = GameLibrary.SteamPath();
+            if (steam == null || g.AppId == null) return (null, 0);
+            foreach (var f in Directory.EnumerateFiles(Path.Combine(steam, "userdata"), "localconfig.vdf", SearchOption.AllDirectories))
+            {
+                var text = File.ReadAllText(f);
+                var m = Regex.Match(text, "\"" + g.AppId + "\"\\s*\\{([^{}]*)\\}");
+                if (!m.Success) continue;
+                var block = m.Groups[1].Value;
+                long.TryParse(Regex.Match(block, "\"LastPlayed\"\\s+\"(\\d+)\"").Groups[1].Value, out var lp);
+                int.TryParse(Regex.Match(block, "\"Playtime\"\\s+\"(\\d+)\"").Groups[1].Value, out var pt);
+                if (lp > 0 || pt > 0) return (lp > 0 ? DateTimeOffset.FromUnixTimeSeconds(lp).LocalDateTime : null, pt);
+            }
+        }
+        catch { }
+        return (null, 0);
+    }
 
     void FillInfo(Store? st)
     {
         info.Children.Clear();
+        if (st?.Esrb != null)
+            info.Children.Add(new Border { Background = Brushes.Transparent, BorderBrush = Brushes.White, BorderThickness = new Thickness(2), CornerRadius = new CornerRadius(5), Padding = new Thickness(10, 2), HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 6), Child = Ui.Text("ESRB " + st.Esrb, 15, true) });
+        var (last, mins) = PlayInfo();
+        if (g.AppId != null)
+        {
+            var days = last == null ? -1 : (int)(DateTime.Now.Date - last.Value.Date).TotalDays;
+            Line("Last played", last == null ? "Not played" : days == 0 ? "Played today" : days == 1 ? "Yesterday" : last.Value.ToString("MMM d, yyyy"));
+            Line("Time played", mins <= 0 ? "Not played" : mins < 60 ? mins + " min" : (mins / 60) + " h " + (mins % 60) + " min");
+        }
         Line("Source", g.AppId != null ? "Steam" : null);
         Line("Developer", st?.Dev);
         Line("Publisher", st?.Pub);
@@ -160,7 +192,9 @@ public class GameView : Grid, IKeyHandler
                 d.TryGetProperty("short_description", out var sd) ? System.Net.WebUtility.HtmlDecode(sd.GetString() ?? "") : null,
                 J("developers", ", "), J("publishers", ", "),
                 d.TryGetProperty("release_date", out var rd) && rd.TryGetProperty("date", out var dt) ? dt.GetString() : null,
-                J("genres", ", "));
+                J("genres", ", "),
+                d.TryGetProperty("ratings", out var rt) && rt.TryGetProperty("esrb", out var es) && es.TryGetProperty("rating", out var er)
+                    ? (er.GetString() ?? "").ToLowerInvariant() switch { "e" => "E", "e10" => "E10+", "t" => "T", "m" => "M", "ao" => "AO", "ec" => "EC", var o => o.ToUpperInvariant() } : null);
             Avalonia.Threading.Dispatcher.UIThread.Post(() => { desc.Text = st.Desc ?? ""; FillInfo(st); });
         }
         catch (Exception e)
