@@ -32,7 +32,7 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\MegaHubPlus.exe"; Tasks: desk
 Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked
 
 [Run]
-Filename: "{app}\MegaHubPlus.exe"; Description: "Start {#AppName}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\MegaHubPlus.exe"; Description: "Start {#AppName}"; Flags: nowait postinstall
 
 [UninstallDelete]
 ; remove everything Mega Hub + saved, so no trace is left

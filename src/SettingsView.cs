@@ -70,8 +70,7 @@ public class SettingsView : Grid, IKeyHandler
         var power = new StackPanel { Orientation = Orientation.Horizontal };
         power.Children.Add(Option("Update Mega Hub +", false, () =>
         {
-            status.Text = "Not connected yet. Updates will work once Mega Hub + is on GitHub.";
-            Build();
+            DoUpdate();
         }));
         power.Children.Add(Option("Quit Mega Hub +", false, () => Environment.Exit(0)));
         power.Children.Add(Option("Uninstall...", false, () => { confirmUninstall = true; status.Text = ""; Build(); }));
@@ -105,6 +104,40 @@ public class SettingsView : Grid, IKeyHandler
         done.Margin = new Thickness(4, 30, 0, 0);
         col.Children.Add(done);
         ApplyFocus();
+    }
+
+    bool updating;
+
+    // Downloads the newest installer from GitHub, runs it quietly, and closes this app so it can be replaced.
+    void DoUpdate()
+    {
+        if (updating) return;
+        updating = true;
+        status.Text = "Checking GitHub for the newest version...";
+        Build();
+        System.Threading.Tasks.Task.Run(async () =>
+        {
+            try
+            {
+                var file = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "MegaHubPlus-Update.exe");
+                using (var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromMinutes(5) })
+                {
+                    http.DefaultRequestHeaders.UserAgent.ParseAdd("MegaHubPlus-Updater");
+                    using var resp = await http.GetAsync("https://github.com/jjrussellite28-art/Mega-hub-/releases/download/Beta/MegaHubPlus-Setup.exe");
+                    resp.EnsureSuccessStatusCode();
+                    await using var fs = System.IO.File.Create(file);
+                    await resp.Content.CopyToAsync(fs);
+                }
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => { status.Text = "Installing the update. Mega Hub + will restart."; Build(); });
+                await System.Threading.Tasks.Task.Delay(800);
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(file, "/SILENT /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS") { UseShellExecute = true });
+                Environment.Exit(0);
+            }
+            catch (Exception ex)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => { updating = false; status.Text = "Update failed: " + ex.Message + " (nothing was changed)"; Build(); });
+            }
+        });
     }
 
     // Removes saved data. Removes the program folder too, but only for a real install
