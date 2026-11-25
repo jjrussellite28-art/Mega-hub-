@@ -85,3 +85,15 @@ Fixed along the way: Program.cs startup, and RollForward=LatestMajor so it runs 
 - Built: safe start screen (after 2 failed starts), settings file repair, logs in %AppData%\MegaHubPlus\logs + "Copy log" button, controller unplug/replug handling, update download checks (size, Windows program, GitHub checksum), smoke test in the GitHub build (app must start and exit cleanly or no release).
 - Tested on the laptop: Copy log, checked Update (restarts into the new build), GitHub smoke test passes.
 - UNTESTED: safe start screen (needs two failed starts), broken-settings repair, controller unplug with real hardware.
+
+## Wanted (from Jake, Playnite feature list, Nov 25) - not built yet
+- Import popular libraries: Steam (done), Epic, GOG, Origin/EA, Battle.net, Ubisoft; also games that are not installed
+- Emulation support (retro consoles, add any .exe/emulator)
+- Themes / skins (full look changes)
+- Extensions: add-ons and plugins (Add-ons & Plugins category exists; signing tool, Weather, News still to build)
+- Fullscreen mode with full controller support (in progress)
+- Playtime counter (any game, emulated too)
+- Fast and light, portable (no install needed), safe and private (everything stored locally)
+- Metadata from online (IGDB / SteamGridDB / Steam store): covers, wallpapers, descriptions, also for custom games
+- Tabs (Media, Store, Friends) still only labels
+- Wallpaper: wide art from online sources (Steam 1920x1080 or SteamGridDB, needs free key)
