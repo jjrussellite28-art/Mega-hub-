@@ -119,3 +119,7 @@ Fixed along the way: Program.cs startup, and RollForward=LatestMajor so it runs 
 - Text: "More integrations can be installed later from the Add-ons menu" (our Settings > Add-ons & Plugins)
 - Next button at the bottom right
 - Only Steam works today; the others need to be built one by one
+
+## Wanted (from Jake, Playnite Add-ons screen + IGDB, Nov 25) - not built yet
+- IGDB metadata source inside Mega Hub + (covers, wallpapers/artwork, descriptions, also for custom games). Needs a free Twitch developer Client ID + Secret (Jake makes the account; app gets a place to enter them in Settings)
+- Add-ons & Plugins screen laid out like Playnite's Add-ons: Updates, Extensions settings (Libraries, Metadata Sources > IGDB), Installed and Browse, each split into Libraries / Metadata Sources / Generic / Themes (Desktop) / Themes (Fullscreen)
