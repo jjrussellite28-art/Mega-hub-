@@ -21,6 +21,7 @@ public class MainWindow : Window
         base.Content = root;
         pad = new Gamepad(k => { if (IsActive && Content is IKeyHandler h) h.OnKey(k); }, () => Environment.Exit(0));
         hints = new HintBar(() => pad.Connected);
+        Opened += (_, _) => { if (st.ShellMode) ApplyMode(); };
         ApplyMode();
         if (st.Look == null) ShowPicker(); else ShowLook();
     }
@@ -61,7 +62,15 @@ public class MainWindow : Window
     void ApplyMode()
     {
         Topmost = st.ShellMode;
-        WindowState = st.ShellMode ? WindowState.FullScreen : WindowState.Normal;
+        if (!st.ShellMode) { WindowState = WindowState.Normal; return; }
+        // shell mode goes on the screen that is NOT the main one (if there is one), so the desktop stays usable
+        var target = Screens.All.FirstOrDefault(sc => !sc.IsPrimary) ?? Screens.Primary;
+        if (target != null)
+        {
+            WindowState = WindowState.Normal;
+            Position = new Avalonia.PixelPoint(target.Bounds.X + 50, target.Bounds.Y + 50);
+        }
+        WindowState = WindowState.FullScreen;
     }
 
     void OnKeyDown(object? sender, KeyEventArgs e)
