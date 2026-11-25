@@ -11,7 +11,7 @@ public class MainWindow : Window
 
     public MainWindow()
     {
-        Title = "Mega Hub Plus";
+        Title = "Mega Hub +";
         Width = 1280;
         Height = 720;
         Background = Brushes.Black;

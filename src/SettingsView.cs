@@ -68,19 +68,19 @@ public class SettingsView : Grid, IKeyHandler
         col.Children.Add(Section("Power"));
         grid.Add(new());
         var power = new StackPanel { Orientation = Orientation.Horizontal };
-        power.Children.Add(Option("Update Mega Hub Plus", false, () =>
+        power.Children.Add(Option("Update Mega Hub +", false, () =>
         {
-            status.Text = "Not connected yet. Updates will work once Mega Hub Plus is on GitHub.";
+            status.Text = "Not connected yet. Updates will work once Mega Hub + is on GitHub.";
             Build();
         }));
-        power.Children.Add(Option("Quit Mega Hub Plus", false, () => Environment.Exit(0)));
+        power.Children.Add(Option("Quit Mega Hub +", false, () => Environment.Exit(0)));
         power.Children.Add(Option("Uninstall...", false, () => { confirmUninstall = true; status.Text = ""; Build(); }));
         col.Children.Add(power);
 
         if (confirmUninstall)
         {
             var warn = new StackPanel();
-            var t = Ui.Text("WARNING: this removes Mega Hub Plus and everything it saved. Everything. Nothing is left behind.", 15, true, "#FF8A8A");
+            var t = Ui.Text("WARNING: this removes Mega Hub + and everything it saved. Everything. Nothing is left behind.", 15, true, "#FF8A8A");
             t.TextWrapping = TextWrapping.Wrap;
             t.MaxWidth = 560;
             warn.Children.Add(t);
@@ -108,7 +108,7 @@ public class SettingsView : Grid, IKeyHandler
     }
 
     // Removes saved data. Removes the program folder too, but only for a real install
-    // (never a developer build, and only a folder that is clearly Mega Hub Plus's own).
+    // (never a developer build, and only a folder that is clearly Mega Hub +'s own).
     void DoUninstall()
     {
         try

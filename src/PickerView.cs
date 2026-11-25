@@ -25,7 +25,7 @@ public class PickerView : Grid, IKeyHandler
         this.onPick = onPick;
         Background = Ui.Grad("#0B0F1A", "#1A1030");
         var col = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-        var h = Ui.Text("Welcome to Mega Hub Plus", 34, true);
+        var h = Ui.Text("Welcome to Mega Hub +", 34, true);
         h.HorizontalAlignment = HorizontalAlignment.Center;
         col.Children.Add(h);
         var sub = Ui.Text("Pick your look. You can change it any time in Settings.   (Left/Right + Enter)", 15, false, "#CCFFFFFF");

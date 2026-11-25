@@ -29,7 +29,7 @@ public class WideHomeLook : LookBase
         Children.Add(right);
 
         var center = new StackPanel { Margin = new Thickness(16) };
-        center.Children.Add(Ui.Text("Mega Hub Plus", 20, true));
+        center.Children.Add(Ui.Text("Mega Hub +", 20, true));
         var rl = Ui.Text("Recent Games", 22, true);
         rl.Margin = new Thickness(0, 14, 0, 6);
         center.Children.Add(rl);

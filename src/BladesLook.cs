@@ -35,7 +35,7 @@ public class BladesLook : LookBase
         var top = new StackPanel();
 
         var header = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto") };
-        header.Children.Add(Ui.Text("Mega Hub Plus", 18, true));
+        header.Children.Add(Ui.Text("Mega Hub +", 18, true));
         var search = new Border
         {
             Background = Ui.B("#33000000"), CornerRadius = new CornerRadius(16), Padding = new Thickness(14, 4),

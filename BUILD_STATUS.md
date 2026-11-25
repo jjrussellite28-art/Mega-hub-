@@ -1,10 +1,10 @@
-# Mega Hub Plus: Build Status
+# Mega Hub +: Build Status
 
 Last updated: 2026-11-24. It builds and runs on Jake's Windows laptop.
 Fixed along the way: Program.cs startup, and RollForward=LatestMajor so it runs on the installed .NET.
 
 ## Built and TESTED (Claude, on the laptop)
-- Builds and opens from "Run Mega Hub Plus.bat"
+- Builds and opens from "Run Mega Hub +.bat"
 - Startup picker shows three looks, click picks one
 - Console Row look opens, shows tiles, Play button, last-played panel
 - Blades look opens (side panels, Recent Games, Library tiles, hints)
@@ -54,7 +54,7 @@ Fixed along the way: Program.cs startup, and RollForward=LatestMajor so it runs 
 - Play/launch still untested.
 
 ## Pending: GitHub upload
-- New empty repo: https://github.com/jjrussellite28-art/Mega-hub- (for Mega Hub Plus only).
+- New empty repo: https://github.com/jjrussellite28-art/Mega-hub- (for Mega Hub + only).
 - Not uploaded yet: laptop browser and this session are not signed in to GitHub. Jake will sign in later, then upload the project files (skip bin/ and obj/).
 - License not chosen yet (leaning MIT; GPL-3.0 if forks must stay open).
 - Controller support (Xbox/XInput) built but untested with a real controller.

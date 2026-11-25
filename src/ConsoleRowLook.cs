@@ -39,7 +39,7 @@ public class ConsoleRowLook : LookBase
         tabs.Children.Add(Ui.Pill("Games", "#33FFFFFF", "#FFFFFF", 14));
         foreach (var t in new[] { "Media", "Store", "Friends" })
             tabs.Children.Add(Ui.Pill(t, "#00000000", "#CCFFFFFF", 14));
-        bar.Children.Add(Ui.Text("Mega Hub Plus", 18, true));
+        bar.Children.Add(Ui.Text("Mega Hub +", 18, true));
         Grid.SetColumn(tabs, 1);
         bar.Children.Add(tabs);
         var clock = Ui.Clock();

@@ -1,4 +1,4 @@
-# Mega Hub Plus
+# Mega Hub +
 
 New from-scratch, Windows, controller-first PC launcher (C# + Avalonia). Separate from the Mega Hub fork and MegaHub. No code copied from either.
 
