@@ -11,6 +11,7 @@ public class ConsoleRowLook : LookBase
 {
     readonly StackPanel gridHost = new() { Margin = new Thickness(24, 0, 24, 0), VerticalAlignment = VerticalAlignment.Top };
     readonly TextBlock title = Ui.Text("", 34, true);
+    readonly Border dim = new();        // light tint over the wallpaper
     readonly Border hero = new();       // blurred copy fills the whole screen
     readonly Border heroSharp = new();  // the whole picture, nothing cut off
     int top;                       // first visible row of the poster grid
@@ -29,7 +30,7 @@ public class ConsoleRowLook : LookBase
         hero.Effect = new BlurEffect { Radius = 30 };
         SetRowSpan(hero, 3);
         Children.Add(hero);
-        var dim = new Border { IsHitTestVisible = false, Background = Ui.B("#66060A14") };
+        dim.IsHitTestVisible = false;
         SetRowSpan(dim, 3);
         Children.Add(dim);
         heroSharp.IsHitTestVisible = false;
@@ -193,6 +194,7 @@ public class ConsoleRowLook : LookBase
         hero.Effect = null;
         hero.Margin = new Thickness(0);
         RenderOptions.SetBitmapInterpolationMode(hero, Avalonia.Media.Imaging.BitmapInterpolationMode.HighQuality);
+        dim.Background = Ui.B(S.Wall == WallFit.Fill || S.Wall == WallFit.Crop ? "#1A060A14" : "#66060A14");   // crisp, bright wallpaper
         if (S.Wall == WallFit.Cover)
         {
             // the poster's own art as a full-screen soft backdrop: always the right shape, matches the cover, any game, any screen
