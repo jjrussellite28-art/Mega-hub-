@@ -106,3 +106,10 @@ Fixed along the way: Program.cs startup, and RollForward=LatestMajor so it runs 
 - Bumpers: LB / RB switch tabs (show LB and RB badges at each end of the tab bar)
 - Bottom button hints all clickable with the mouse/touch (A and B done; add Y = Menu, Power, and any new ones)
 - Home like his photo: tab bar (Favorites, Games, Apps, Downloads, Browser, Settings), Continue playing with the game logo, big poster card, wallpaper behind, bell badge with a count, clock, A Open / Y Menu / Power hints
+
+## Wanted (from Jake, CouchHUD-style Settings, Nov 25) - not built yet
+- Settings look: tab bar stays on top (Settings underlined, LB / RB badges), categories with icons on the left (selected = cyan outline), right side rows are wide cards: bold title, one small description line under it, current value + arrow on the right
+- A highlighted first card "Setup assistant" (run the setup again any time)
+- Soft purple / pink glow over the dark blue background
+- Pressing a row opens a popup panel over the blurred page (example: Mode with Shell and App option cards, chosen one lit cyan, each with an icon and a short description); A chooses, B closes
+- Bottom hints on Settings: A Open, B Home (clickable)
