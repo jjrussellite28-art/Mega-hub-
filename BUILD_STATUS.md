@@ -80,3 +80,8 @@ Fixed along the way: Program.cs startup, and RollForward=LatestMajor so it runs 
 ## Later (Jake asked to save for later)
 - Manual games: add any game/emulator by picking its .exe (retro and other launchers), plus extra Steam library folders. Button placement not chosen yet (Settings Games section, the ••• button on home, or both).
 - Epic / GOG games, per-game controller screen, restyle Blades and Wide Home to match the concept images.
+
+## Stability pass (2026-11-25)
+- Built: safe start screen (after 2 failed starts), settings file repair, logs in %AppData%\MegaHubPlus\logs + "Copy log" button, controller unplug/replug handling, update download checks (size, Windows program, GitHub checksum), smoke test in the GitHub build (app must start and exit cleanly or no release).
+- Tested on the laptop: Copy log, checked Update (restarts into the new build), GitHub smoke test passes.
+- UNTESTED: safe start screen (needs two failed starts), broken-settings repair, controller unplug with real hardware.
