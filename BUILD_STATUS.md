@@ -113,3 +113,9 @@ Fixed along the way: Program.cs startup, and RollForward=LatestMajor so it runs 
 - Soft purple / pink glow over the dark blue background
 - Pressing a row opens a popup panel over the blurred page (example: Mode with Shell and App option cards, chosen one lit cyan, each with an icon and a short description); A chooses, B closes
 - Bottom hints on Settings: A Open, B Home (clickable)
+
+## Wanted (from Jake, Playnite first-time setup, Nov 25) - not built yet
+- A setup step "Library Integration": tick boxes for the stores to connect: Amazon, Battle.net, Epic Games Store, EA, GOG, itch.io, Steam, Ubisoft Connect, Xbox Game Pass / MS Store
+- Text: "More integrations can be installed later from the Add-ons menu" (our Settings > Add-ons & Plugins)
+- Next button at the bottom right
+- Only Steam works today; the others need to be built one by one
