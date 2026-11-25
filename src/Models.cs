@@ -4,7 +4,8 @@ namespace MegaHubPlus;
 
 public enum LookKind { ConsoleRow, Blades, WideHome }
 public enum WallFit { Fill, Crop, Fit, Cover }   // Cover = the game's cover art, softly blurred, full screen   // wallpaper: stretch to the screen, crop to the screen, or show whole picture
-public enum TileShape { Wide, Short, Poster }   // 16:9, 3:4, 2:3
+// saved as numbers, so keep this order: Wide 16:9, Short = Box cover 3:4, Poster = Steam poster 2:3, then the rest
+public enum TileShape { Wide, Short, Poster, Square, Retro, Slim, Original }
 
 public record Game(string Title, string C1, string C2, string? AppId = null, string? CoverPath = null, string? HeroPath = null, string? LogoPath = null);
 

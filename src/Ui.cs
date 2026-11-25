@@ -29,23 +29,37 @@ public static class Ui
         GradientStops = new GradientStops { new GradientStop(Color.Parse(a), 0), new GradientStop(Color.Parse(b), 1) },
     };
 
-    public static (double w, double h) Size(TileShape s) => s switch
+    public static (double w, double h) Size(TileShape s, Game? g = null)
     {
-        TileShape.Wide => (300, 169),    // 16:9
-        TileShape.Short => (170, 227),   // 3:4
-        _ => (150, 225),                 // 2:3 poster
-    };
+        const double H = 227;
+        switch (s)
+        {
+            case TileShape.Wide: return (300, 169);          // 16:9
+            case TileShape.Poster: return (150, 225);        // 2:3
+            case TileShape.Square: return (200, 200);        // 1:1
+            case TileShape.Retro: return (260, 195);         // 4:3
+            case TileShape.Slim: return (128, 228);          // 9:16
+            case TileShape.Original:
+                var bm = GameLibrary.LoadBitmap(g?.CoverPath);
+                if (bm != null && bm.Size.Height > 0) return (Math.Clamp(H * bm.Size.Width / bm.Size.Height, 120, 300), H);
+                return (170, H);
+            default: return (170, 227);                      // Box cover 3:4
+        }
+    }
 
     public static Border Tile(Game g, TileShape shape, bool selected, string glow)
     {
-        var (w, h) = Size(shape);
+        var (w, h) = Size(shape, g);
         if (selected) { w *= 1.1; h *= 1.1; }
-        var art = GameLibrary.ArtBrush(shape == TileShape.Wide ? (g.HeroPath ?? g.CoverPath) : g.CoverPath);
+        // Fit: the whole cover always shows, nothing is cut off
+        var art = shape == TileShape.Wide ? GameLibrary.ArtBrush(g.HeroPath ?? g.CoverPath, Stretch.Uniform) : GameLibrary.ArtBrush(g.CoverPath, Stretch.Uniform);
+        if (art is ImageBrush ib) ib.AlignmentY = AlignmentY.Center;
         var tile = new Border
         {
             Width = w, Height = h,
             CornerRadius = new CornerRadius(12),
             Background = art ?? Grad(g.C1, g.C2),
+            ClipToBounds = true,
             BorderBrush = B(selected ? glow : "#00000000"),
             BorderThickness = new Thickness(3),
             Margin = new Thickness(6),

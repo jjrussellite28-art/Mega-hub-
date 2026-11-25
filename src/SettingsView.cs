@@ -26,7 +26,9 @@ public class SettingsView : Grid, IKeyHandler
     };
     static readonly (TileShape v, string name)[] Shapes =
     {
-        (TileShape.Wide, "Wide 16:9"), (TileShape.Short, "Short 3:4"), (TileShape.Poster, "Tall poster 2:3"),
+        (TileShape.Short, "3:4 Box cover"), (TileShape.Poster, "2:3 Steam poster"), (TileShape.Square, "1:1 Square"),
+        (TileShape.Retro, "4:3 Retro wide"), (TileShape.Slim, "9:16 Slim poster"), (TileShape.Wide, "16:9 Widescreen"),
+        (TileShape.Original, "Original shape"),
     };
     const string Icons = "Segoe Fluent Icons, Segoe MDL2 Assets";
 
