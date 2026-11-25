@@ -100,7 +100,7 @@ public static class GameLibrary
             try { bmp = new Bitmap(path); } catch { bmp = null; }
             bitmaps[path] = bmp;
         }
-        return bmp == null ? null : new ImageBrush(bmp) { Stretch = stretch, AlignmentY = AlignmentY.Top, AlignmentX = AlignmentX.Center };
+        return bmp == null ? null : new ImageBrush(bmp) { Stretch = stretch, AlignmentY = stretch == Stretch.Uniform ? AlignmentY.Top : AlignmentY.Center, AlignmentX = AlignmentX.Center };
     }
 
     public static void Launch(Game g)

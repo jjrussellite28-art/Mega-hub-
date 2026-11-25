@@ -23,7 +23,7 @@ public class ConsoleRowLook : LookBase
         RowDefinitions = new RowDefinitions("Auto,*,Auto");
         SizeChanged += (_, _) => Refresh();
 
-        // big game art: shown whole (fits the width), then fades into the dark background
+        // big game art fills the whole screen; a dark fade keeps the text readable
         hero.IsHitTestVisible = false;
         SetRowSpan(hero, 3);
         Children.Add(hero);
@@ -32,14 +32,13 @@ public class ConsoleRowLook : LookBase
             IsHitTestVisible = false,
             Background = new LinearGradientBrush
             {
-                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-                EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+                StartPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(0.7, 0, RelativeUnit.Relative),
                 GradientStops = new GradientStops
                 {
-                    new GradientStop(Color.Parse("#00060A14"), 0),
-                    new GradientStop(Color.Parse("#33060A14"), 0.22),
-                    new GradientStop(Color.Parse("#CC060A14"), 0.40),
-                    new GradientStop(Color.Parse("#FF060A14"), 0.52),
+                    new GradientStop(Color.Parse("#F2060A14"), 0),
+                    new GradientStop(Color.Parse("#80060A14"), 0.45),
+                    new GradientStop(Color.Parse("#00060A14"), 1),
                 },
             },
         };
@@ -88,12 +87,19 @@ public class ConsoleRowLook : LookBase
         Refresh();
     }
 
-    static Control BellIcon() => new Avalonia.Controls.Shapes.Path
+    // bell drawn on an exact 24x24 grid so it stays sharp and straight
+    static Control BellIcon()
     {
-        Data = Geometry.Parse("M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0"),
-        Stroke = Ui.B("#FFFFFF"), StrokeThickness = 2, StrokeLineCap = PenLineCap.Round, StrokeJoin = PenLineJoin.Round,
-        Width = 26, Height = 26, Stretch = Stretch.Uniform,
-    };
+        var path = new Avalonia.Controls.Shapes.Path
+        {
+            Data = Geometry.Parse("M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0"),
+            Stroke = Ui.B("#FFFFFF"), StrokeThickness = 2, StrokeLineCap = PenLineCap.Round, StrokeJoin = PenLineJoin.Round,
+            Stretch = Stretch.None,
+        };
+        var canvas = new Canvas { Width = 24, Height = 24 };
+        canvas.Children.Add(path);
+        return new Viewbox { Width = 28, Height = 28, Stretch = Stretch.Uniform, Child = canvas, UseLayoutRounding = true };
+    }
 
     // round icon button: glows blue when the mouse is over it
     static Border IconButton(Control icon, Action click)
@@ -170,8 +176,7 @@ public class ConsoleRowLook : LookBase
         }
         var g = Games[Sel];
         Background = Ui.B("#060A14");
-        hero.Background = g.HeroPath != null ? GameLibrary.ArtBrush(g.HeroPath, Stretch.Uniform)
-                        : GameLibrary.ArtBrush(g.CoverPath) ?? Ui.Grad(g.C1, "#0B0F1A", false);
+        hero.Background = GameLibrary.ArtBrush(g.HeroPath ?? g.CoverPath) ?? Ui.Grad(g.C1, "#0B0F1A", false);
         title.Text = g.Title;
 
         int cols = Cols, rows = VisibleRows, selRow = Sel / cols;
