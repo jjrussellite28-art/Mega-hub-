@@ -70,3 +70,13 @@ Fixed along the way: Program.cs startup, and RollForward=LatestMajor so it runs 
 - Settings: Mode section works. Shell mode goes full screen; App mode returns to a window. Quit button present.
 - Not tested: controller hardware, Ctrl+Alt+Q / Back+Start hold exits, in-app Uninstall on the installed copy (should run the installer's uninstaller).
 - Known: running straight from source (dotnet run) can be blocked by Windows Smart App Control. App is unsigned.
+
+## Built since (2026-11-25), UNTESTED where noted
+- Controller button hint bar (tested, keyboard keys). Controller glyphs untested.
+- Real in-app Update from GitHub (tested).
+- Real Shell mode: sets Mega Hub + as the sign-in shell (HKCU), Desktop mode switch, auto-restores desktop on exit/crash/uninstall. Warning panel tested; real sign-in as shell UNTESTED.
+- PlayStation / Nintendo controllers via SDL, with matching button names. UNTESTED (no hardware).
+
+## Later (Jake asked to save for later)
+- Manual games: add any game/emulator by picking its .exe (retro and other launchers), plus extra Steam library folders. Button placement not chosen yet (Settings Games section, the ••• button on home, or both).
+- Epic / GOG games, per-game controller screen, restyle Blades and Wide Home to match the concept images.
