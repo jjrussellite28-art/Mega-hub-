@@ -11,7 +11,8 @@ public class ConsoleRowLook : LookBase
 {
     readonly StackPanel gridHost = new() { Margin = new Thickness(24, 0, 24, 0), VerticalAlignment = VerticalAlignment.Top };
     readonly TextBlock title = Ui.Text("", 34, true);
-    readonly Border hero = new();
+    readonly Border hero = new();       // blurred copy fills the whole screen
+    readonly Border heroSharp = new();  // the whole picture, nothing cut off
     int top;                       // first visible row of the poster grid
     bool menuOpen;
     int menuIdx;
@@ -25,8 +26,22 @@ public class ConsoleRowLook : LookBase
 
         // big game art fills the whole screen; a dark fade keeps the text readable
         hero.IsHitTestVisible = false;
+        hero.Effect = new BlurEffect { Radius = 40 };
         SetRowSpan(hero, 3);
         Children.Add(hero);
+        var dim = new Border { IsHitTestVisible = false, Background = Ui.B("#66060A14") };
+        SetRowSpan(dim, 3);
+        Children.Add(dim);
+        heroSharp.IsHitTestVisible = false;
+        heroSharp.VerticalAlignment = VerticalAlignment.Top;
+        heroSharp.OpacityMask = new LinearGradientBrush
+        {
+            StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+            EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+            GradientStops = new GradientStops { new GradientStop(Colors.Black, 0), new GradientStop(Colors.Black, 0.8), new GradientStop(Colors.Transparent, 1) },
+        };
+        SetRowSpan(heroSharp, 3);
+        Children.Add(heroSharp);
         var fade = new Border
         {
             IsHitTestVisible = false,
@@ -61,7 +76,7 @@ public class ConsoleRowLook : LookBase
         clock.FontSize = 26;
         clock.Margin = new Thickness(10, 0, 14, 0);
         right.Children.Add(clock);
-        var gear = Ui.Text("⚙", 28, false);
+        var gear = Glyph("\uE713", 26);
         right.Children.Add(IconButton(gear, () => OpenSettings?.Invoke()));
         Grid.SetColumn(right, 2);
         bar.Children.Add(right);
@@ -87,19 +102,15 @@ public class ConsoleRowLook : LookBase
         Refresh();
     }
 
-    // bell drawn on an exact 24x24 grid so it stays sharp and straight
-    static Control BellIcon()
+    // Windows' own icon font: always sharp and straight
+    static TextBlock Glyph(string ch, double size) => new()
     {
-        var path = new Avalonia.Controls.Shapes.Path
-        {
-            Data = Geometry.Parse("M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0"),
-            Stroke = Ui.B("#FFFFFF"), StrokeThickness = 2, StrokeLineCap = PenLineCap.Round, StrokeJoin = PenLineJoin.Round,
-            Stretch = Stretch.None,
-        };
-        var canvas = new Canvas { Width = 24, Height = 24 };
-        canvas.Children.Add(path);
-        return new Viewbox { Width = 28, Height = 28, Stretch = Stretch.Uniform, Child = canvas, UseLayoutRounding = true };
-    }
+        Text = ch, FontSize = size, Foreground = Ui.B("#FFFFFF"),
+        FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+        HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+    };
+
+    static Control BellIcon() => Glyph("\uEA8F", 26);
 
     // round icon button: glows blue when the mouse is over it
     static Border IconButton(Control icon, Action click)
@@ -171,12 +182,21 @@ public class ConsoleRowLook : LookBase
         {
             Background = Ui.B("#060A14");
             hero.Background = null;
+            heroSharp.Background = null;
             title.Text = "No games found";
             return;
         }
         var g = Games[Sel];
         Background = Ui.B("#060A14");
-        hero.Background = GameLibrary.ArtBrush(g.HeroPath ?? g.CoverPath) ?? Ui.Grad(g.C1, "#0B0F1A", false);
+        var art = GameLibrary.ArtBrush(g.HeroPath ?? g.CoverPath);
+        hero.Background = art ?? Ui.Grad(g.C1, "#0B0F1A", false);
+        // wide picture: show all of it at the right shape (no stretching, no cropping); the blur fills the rest
+        if (g.HeroPath != null && GameLibrary.ArtBrush(g.HeroPath, Stretch.Fill) is ImageBrush ib && ib.Source != null && Bounds.Width > 0)
+        {
+            heroSharp.Background = ib;
+            heroSharp.Height = Bounds.Width * ib.Source.Size.Height / ib.Source.Size.Width;
+        }
+        else heroSharp.Background = null;
         title.Text = g.Title;
 
         int cols = Cols, rows = VisibleRows, selRow = Sel / cols;
