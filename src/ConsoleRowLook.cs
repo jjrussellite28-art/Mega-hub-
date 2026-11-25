@@ -37,9 +37,9 @@ public class ConsoleRowLook : LookBase
                 GradientStops = new GradientStops
                 {
                     new GradientStop(Color.Parse("#00060A14"), 0),
-                    new GradientStop(Color.Parse("#33060A14"), 0.30),
-                    new GradientStop(Color.Parse("#E6060A14"), 0.55),
-                    new GradientStop(Color.Parse("#FF060A14"), 0.75),
+                    new GradientStop(Color.Parse("#33060A14"), 0.22),
+                    new GradientStop(Color.Parse("#CC060A14"), 0.40),
+                    new GradientStop(Color.Parse("#FF060A14"), 0.52),
                 },
             },
         };
