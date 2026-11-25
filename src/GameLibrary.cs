@@ -92,7 +92,7 @@ public static class GameLibrary
         return null;
     }
 
-    public static IBrush? ArtBrush(string? path)
+    public static IBrush? ArtBrush(string? path, Stretch stretch = Stretch.UniformToFill)
     {
         if (path == null) return null;
         if (!bitmaps.TryGetValue(path, out var bmp))
@@ -100,7 +100,7 @@ public static class GameLibrary
             try { bmp = new Bitmap(path); } catch { bmp = null; }
             bitmaps[path] = bmp;
         }
-        return bmp == null ? null : new ImageBrush(bmp) { Stretch = Stretch.UniformToFill };
+        return bmp == null ? null : new ImageBrush(bmp) { Stretch = stretch, AlignmentY = AlignmentY.Top, AlignmentX = AlignmentX.Center };
     }
 
     public static void Launch(Game g)

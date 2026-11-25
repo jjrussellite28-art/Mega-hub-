@@ -38,7 +38,7 @@ public class MainWindow : Window
         };
         ApplyMode();
         if (Startup.SafeMode) ShowSafe();
-        else if (st.Look == null) ShowPicker(); else ShowLook();
+        else ShowLook();
     }
 
     // current screen sits under the hint bar
@@ -55,36 +55,29 @@ public class MainWindow : Window
     void ShowSafe()
     {
         Content = new SafeView(
-            () => { Startup.SafeMode = false; Startup.MarkOk(); if (st.Look == null) ShowPicker(); else ShowLook(); },
+            () => { Startup.SafeMode = false; Startup.MarkOk(); ShowLook(); },
             () =>
             {
                 ShellControl.Disable();
                 if (!ShellControl.ExplorerRunning()) ShellControl.StartExplorer();
                 st.ShellMode = false; st.Save(); ApplyMode();
                 Startup.SafeMode = false; Startup.MarkOk();
-                if (st.Look == null) ShowPicker(); else ShowLook();
+                ShowLook();
             },
             () =>
             {
-                st.Look = null; st.ShellMode = false; st.Shape = TileShape.Short; st.Save(); ApplyMode();
+                st.ShellMode = false; st.Shape = TileShape.Short; st.Save(); ApplyMode();
                 ShellControl.Disable();
                 Startup.SafeMode = false; Startup.MarkOk();
-                ShowPicker();
+                ShowLook();
             },
             () => Environment.Exit(0));
         hints.Set(("A", "Enter", "Select"), ("▲▼", "↑↓", "Move"));
     }
 
-    void ShowPicker() { Content = new PickerView(kind => { st.Look = kind; st.Save(); ShowLook(); }); hints.Set(("A", "Enter", "Choose"), ("◀▶", "←→", "Move")); }
-
     void ShowLook()
     {
-        LookBase look = st.Look switch
-        {
-            LookKind.Blades => new BladesLook(st),
-            LookKind.WideHome => new WideHomeLook(st),
-            _ => new ConsoleRowLook(st),
-        };
+        LookBase look = new ConsoleRowLook(st);
         look.OpenSettings = ShowSettings;
         Content = look;
         void BrowseHints() => hints.Set(("A", "Enter", "Open"), ("◀▶▲▼", "Arrows", "Browse"), ("≡", "S", "Settings"));

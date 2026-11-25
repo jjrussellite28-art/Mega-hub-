@@ -11,6 +11,7 @@ public class ConsoleRowLook : LookBase
 {
     readonly StackPanel gridHost = new() { Margin = new Thickness(24, 0, 24, 0), VerticalAlignment = VerticalAlignment.Top };
     readonly TextBlock title = Ui.Text("", 34, true);
+    readonly Border hero = new();
     int top;                       // first visible row of the poster grid
     bool menuOpen;
     int menuIdx;
@@ -22,19 +23,23 @@ public class ConsoleRowLook : LookBase
         RowDefinitions = new RowDefinitions("Auto,*,Auto");
         SizeChanged += (_, _) => Refresh();
 
-        // dark fade over the big background art so text stays readable
+        // big game art: shown whole (fits the width), then fades into the dark background
+        hero.IsHitTestVisible = false;
+        SetRowSpan(hero, 3);
+        Children.Add(hero);
         var fade = new Border
         {
             IsHitTestVisible = false,
             Background = new LinearGradientBrush
             {
-                StartPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
-                EndPoint = new RelativePoint(0.7, 0, RelativeUnit.Relative),
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
                 GradientStops = new GradientStops
                 {
-                    new GradientStop(Color.Parse("#F2060A14"), 0),
-                    new GradientStop(Color.Parse("#99060A14"), 0.45),
-                    new GradientStop(Color.Parse("#00060A14"), 1),
+                    new GradientStop(Color.Parse("#00060A14"), 0),
+                    new GradientStop(Color.Parse("#33060A14"), 0.30),
+                    new GradientStop(Color.Parse("#E6060A14"), 0.55),
+                    new GradientStop(Color.Parse("#FF060A14"), 0.75),
                 },
             },
         };
@@ -42,21 +47,31 @@ public class ConsoleRowLook : LookBase
         Children.Add(fade);
 
         var bar = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto") };
-        var tabs = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(24, 0, 0, 0) };
-        tabs.Children.Add(Ui.Pill("Games", "#33FFFFFF", "#FFFFFF", 14));
+        var tabs = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(28, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+        tabs.Children.Add(Ui.Pill("Games", "#33FFFFFF", "#FFFFFF", 18));
         foreach (var t in new[] { "Media", "Store", "Friends" })
-            tabs.Children.Add(Ui.Pill(t, "#00000000", "#CCFFFFFF", 14));
-        bar.Children.Add(Ui.Text("Mega Hub +", 18, true));
+            tabs.Children.Add(Ui.Pill(t, "#00000000", "#CCFFFFFF", 18));
+        bar.Children.Add(Ui.Text("Mega Hub +", 24, true));
         Grid.SetColumn(tabs, 1);
         bar.Children.Add(tabs);
+
+        // right side: notification bell, clock, settings gear
+        var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        right.Children.Add(IconButton(BellIcon(), ShowNotifications));
         var clock = Ui.Clock();
-        Grid.SetColumn(clock, 2);
-        bar.Children.Add(clock);
+        clock.FontSize = 26;
+        clock.Margin = new Thickness(10, 0, 14, 0);
+        right.Children.Add(clock);
+        var gear = Ui.Text("⚙", 28, false);
+        right.Children.Add(IconButton(gear, () => OpenSettings?.Invoke()));
+        Grid.SetColumn(right, 2);
+        bar.Children.Add(right);
         var barBox = new Border
         {
-            Margin = new Thickness(20), Padding = new Thickness(22, 6),
-            CornerRadius = new CornerRadius(26), Background = Ui.B("#88101826"),
-            BorderBrush = Ui.B("#33FFFFFF"), BorderThickness = new Thickness(1), Child = bar,
+            Margin = new Thickness(24, 20), Padding = new Thickness(28, 14),
+            CornerRadius = new CornerRadius(34), Background = Ui.B("#AA101826"),
+            BorderBrush = Ui.B("#44FFFFFF"), BorderThickness = new Thickness(1), Child = bar,
+            BoxShadow = BoxShadows.Parse("0 6 24 0 #66000000"),
         };
         SetRow(barBox, 0);
         Children.Add(barBox);
@@ -73,6 +88,64 @@ public class ConsoleRowLook : LookBase
         Refresh();
     }
 
+    static Control BellIcon() => new Avalonia.Controls.Shapes.Path
+    {
+        Data = Geometry.Parse("M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0"),
+        Stroke = Ui.B("#FFFFFF"), StrokeThickness = 2, StrokeLineCap = PenLineCap.Round, StrokeJoin = PenLineJoin.Round,
+        Width = 26, Height = 26, Stretch = Stretch.Uniform,
+    };
+
+    // round icon button: glows blue when the mouse is over it
+    static Border IconButton(Control icon, Action click)
+    {
+        var b = new Border
+        {
+            Padding = new Thickness(10), CornerRadius = new CornerRadius(12), Margin = new Thickness(2, 0),
+            BorderThickness = new Thickness(2), BorderBrush = Ui.B("#00000000"), Background = Ui.B("#00000000"),
+            Child = icon, Cursor = new Cursor(StandardCursorType.Hand),
+        };
+        b.PointerEntered += (_, _) => { b.Background = Ui.B("#22408CFF"); b.BorderBrush = Ui.B("#4C8DFF"); b.BoxShadow = BoxShadows.Parse("0 0 16 0 #664C8DFF"); };
+        b.PointerExited += (_, _) => { b.Background = Ui.B("#00000000"); b.BorderBrush = Ui.B("#00000000"); b.BoxShadow = default; };
+        b.PointerPressed += (_, e) => { click(); e.Handled = true; };
+        return b;
+    }
+
+    bool notifOpen;
+
+    void ShowNotifications()
+    {
+        if (menuOpen || notifOpen) return;
+        notifOpen = true;
+        var box = new StackPanel { Width = 340 };
+        box.Children.Add(Ui.Text("Notifications", 20, true));
+        var t = Ui.Text("You're all caught up.", 16, false, "#CCFFFFFF");
+        t.Margin = new Thickness(0, 12, 0, 16);
+        box.Children.Add(t);
+        var close = new Border { Background = Ui.B("#F5E9D6"), CornerRadius = new CornerRadius(14), Padding = new Thickness(20, 12), Child = Ui.Text("Close", 17, true, "#1A1A1A") };
+        close.PointerPressed += (_, e) => { CloseNotifications(); e.Handled = true; };
+        box.Children.Add(close);
+        var panel = new Border
+        {
+            Background = Ui.B("#EE101826"), BorderBrush = Ui.B("#44FFFFFF"), BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(20), Padding = new Thickness(24), Child = box,
+            HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 100, 30, 0),
+        };
+        var dim = new Grid { Background = Ui.B("#66000000") };
+        dim.Children.Add(panel);
+        dim.PointerPressed += (_, _) => CloseNotifications();
+        SetRowSpan(dim, 3);
+        overlay = dim;
+        Children.Add(overlay);
+        MenuChanged?.Invoke(true);
+    }
+
+    void CloseNotifications()
+    {
+        notifOpen = false;
+        if (overlay != null) { Children.Remove(overlay); overlay = null; }
+        MenuChanged?.Invoke(false);
+    }
+
     int Cols => S.Shape == TileShape.Wide ? 4 : 6;
 
     int VisibleRows
@@ -81,7 +154,7 @@ public class ConsoleRowLook : LookBase
         {
             if (Bounds.Height < 100) return 2;
             var (_, h) = Ui.Size(S.Shape);
-            return Math.Clamp((int)((Bounds.Height - 230) / (h * 1.1 + 24)), 1, 4);
+            return Math.Clamp((int)((Bounds.Height - 280) / (h * 1.1 + 24)), 1, 4);
         }
     }
 
@@ -90,12 +163,15 @@ public class ConsoleRowLook : LookBase
         gridHost.Children.Clear();
         if (Games.Length == 0)
         {
-            Background = Ui.Grad("#1B2A6B", "#0B0F1A", false);
+            Background = Ui.B("#060A14");
+            hero.Background = null;
             title.Text = "No games found";
             return;
         }
         var g = Games[Sel];
-        Background = GameLibrary.ArtBrush(g.HeroPath ?? g.CoverPath) ?? Ui.Grad(g.C1, "#0B0F1A", false);
+        Background = Ui.B("#060A14");
+        hero.Background = g.HeroPath != null ? GameLibrary.ArtBrush(g.HeroPath, Stretch.Uniform)
+                        : GameLibrary.ArtBrush(g.CoverPath) ?? Ui.Grad(g.C1, "#0B0F1A", false);
         title.Text = g.Title;
 
         int cols = Cols, rows = VisibleRows, selRow = Sel / cols;
@@ -118,6 +194,7 @@ public class ConsoleRowLook : LookBase
 
     public override void OnKey(Key key)
     {
+        if (notifOpen) { if (key == Key.Escape || key == Key.Enter) CloseNotifications(); return; }
         if (menuOpen) { MenuKey(key); return; }
         if (key == Key.S || key == Key.F2) { OpenSettings?.Invoke(); return; }
         if (Games.Length == 0) return;

@@ -37,13 +37,6 @@ public class SettingsView : Grid, IKeyHandler
         grid.Clear();
         col.Children.Add(Ui.Text("Settings", 34, true));
 
-        col.Children.Add(Section("Look"));
-        grid.Add(new());
-        var looks = new StackPanel { Orientation = Orientation.Horizontal };
-        foreach (var (kind, name) in new[] { (LookKind.ConsoleRow, "Console Row"), (LookKind.Blades, "Blades"), (LookKind.WideHome, "Wide Home") })
-            looks.Children.Add(Option(name, s.Look == kind, () => { s.Look = kind; s.Save(); Build(); }));
-        col.Children.Add(looks);
-
         col.Children.Add(Section("Tile shape"));
         grid.Add(new());
         var shapes = new StackPanel { Orientation = Orientation.Horizontal };
