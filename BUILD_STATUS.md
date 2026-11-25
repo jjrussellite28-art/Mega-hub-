@@ -63,3 +63,10 @@ Fixed along the way: Program.cs startup, and RollForward=LatestMajor so it runs 
 - Play / Enter launches Lego Batman through Steam. Works (Steam asked for a one-time permission first).
 - Automatic Windows build on GitHub passes (artifact: MegaHubPlus-windows). Downloaded .exe not yet tested.
 - Still untested with a real controller (Xbox-style via XInput).
+
+## Tested (2026-11-25, installed copy)
+- Installer (MegaHubPlus-Setup.exe from GitHub Releases, "latest") installs per-user to %LocalAppData%\Programs\MegaHubPlus and starts. Windows did not block the installed copy.
+- New Console Row look (big game art background, glass bar, glowing tile) works.
+- Settings: Mode section works. Shell mode goes full screen; App mode returns to a window. Quit button present.
+- Not tested: controller hardware, Ctrl+Alt+Q / Back+Start hold exits, in-app Uninstall on the installed copy (should run the installer's uninstaller).
+- Known: running straight from source (dotnet run) can be blocked by Windows Smart App Control. App is unsigned.
