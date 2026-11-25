@@ -96,16 +96,26 @@ public class MainWindow : Window
     void ApplyMode()
     {
         Topmost = st.ShellMode;
-        if (!st.ShellMode) { WindowState = WindowState.Normal; return; }
+        if (!st.ShellMode) { WindowState = WindowState.Normal; SystemDecorations = SystemDecorations.Full; return; }
         // shell mode goes on the screen that is NOT the main one (if there is one), so the desktop stays usable
         // real shell (no Explorer running) = main screen; preview before sign-out = the other screen
         var target = ShellControl.ExplorerRunning() ? (Screens.All.FirstOrDefault(sc => !sc.IsPrimary) ?? Screens.Primary) : Screens.Primary;
-        if (target != null)
+        if (target == null) { WindowState = WindowState.FullScreen; return; }
+        // size the window to exactly that screen ourselves (true pixels / that screen's scaling),
+        // so it can't spill past the edges on a screen with different scaling than the main one
+        void Fit()
         {
             WindowState = WindowState.Normal;
-            Position = new Avalonia.PixelPoint(target.Bounds.X + 50, target.Bounds.Y + 50);
+            SystemDecorations = SystemDecorations.None;
+            var k = target.Scaling > 0 ? target.Scaling : 1.0;
+            Position = target.Bounds.Position;
+            Width = target.Bounds.Width / k;
+            Height = target.Bounds.Height / k;
         }
-        WindowState = WindowState.FullScreen;
+        Fit();
+        // fix it again once the window has settled on that screen
+        DispatcherTimer.RunOnce(Fit, TimeSpan.FromMilliseconds(400));
+        DispatcherTimer.RunOnce(Fit, TimeSpan.FromMilliseconds(1500));
     }
 
     void OnKeyDown(object? sender, KeyEventArgs e)
