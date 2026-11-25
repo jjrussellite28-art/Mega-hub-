@@ -7,27 +7,34 @@ namespace MegaHubPlus;
 class Program
 {
     [STAThread]
-    public static void Main(string[] args)
+    public static int Main(string[] args)
     {
+        Startup.Smoke = args.Contains("--smoke-test");
+        Startup.Begin();
         var lifetime = new ClassicDesktopStyleApplicationLifetime
         {
             Args = args,
             ShutdownMode = ShutdownMode.OnLastWindowClose,
         };
-        string log = Path.Combine(Directory.GetCurrentDirectory(), "..", "run.log");
-        void Log(string m) { try { File.AppendAllText(log, DateTime.Now.ToString("HH:mm:ss ") + m + "\n"); } catch { } }
-        Log("start");
-        AppDomain.CurrentDomain.UnhandledException += (_, e) => Log("unhandled: " + e.ExceptionObject);
-        AppDomain.CurrentDomain.ProcessExit += (_, _) => { Log("exit\n" + Environment.StackTrace); ShellControl.RestoreDesktopIfNeeded(); };
+        AppLog.Write("start" + (Startup.SafeMode ? " (safe start)" : "") + (Startup.Smoke ? " (smoke test)" : ""));
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => { Startup.Crashed = true; AppLog.Write("unhandled: " + e.ExceptionObject); ShellControl.RestoreDesktopIfNeeded(); };
+        AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+        {
+            AppLog.Write("exit");
+            if (!Startup.Crashed) Startup.MarkOk();   // a normal quit is not a failed start
+            ShellControl.RestoreDesktopIfNeeded();
+        };
         try
         {
             BuildAvaloniaApp().SetupWithLifetime(lifetime);
-            lifetime.Start(args);
+            return lifetime.Start(args);
         }
         catch (Exception e)
         {
-            try { File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), "..", "crash.log"), e.ToString()); } catch { }
+            Startup.Crashed = true;
+            AppLog.Write("crash: " + e);
             ShellControl.RestoreDesktopIfNeeded();
+            return 1;
         }
     }
 

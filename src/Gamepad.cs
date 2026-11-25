@@ -34,17 +34,27 @@ public class Gamepad
         timer.Start();
     }
 
+    DateTime nextScan;
+
     void Poll()
     {
-        XState s;
-        try { Connected = false; for (int i = 0; i < 4; i++) if (XInputGetState(i, out s) == 0) { Connected = true; Kind = "Xbox"; Handle(s); return; } }
-        catch { }
-        // no Xbox-style pad: try PlayStation / Nintendo / other pads through SDL
-        if (sdlPad.TryRead(out var b, out var lx))
+        // not connected: look again only once a second (checking empty slots every tick is slow)
+        if (!Connected && DateTime.UtcNow < nextScan) return;
+        try
         {
-            Connected = true; Kind = sdlPad.Kind;
-            Handle(new XState { Buttons = b, LX = lx });
+            XState s;
+            // a PlayStation / Nintendo pad that is already in use is read first
+            if (Connected && Kind != "Xbox" && sdlPad.TryRead(out var b0, out var lx0)) { Handle(new XState { Buttons = b0, LX = lx0 }); return; }
+            for (int i = 0; i < 4; i++)
+                if (XInputGetState(i, out s) == 0) { Connected = true; Kind = "Xbox"; Handle(s); return; }
+            if (sdlPad.TryRead(out var b, out var lx)) { Connected = true; Kind = sdlPad.Kind; Handle(new XState { Buttons = b, LX = lx }); return; }
         }
+        catch (Exception ex) { AppLog.Write("controller read: " + ex.Message); }
+        // nothing found (unplugged or never plugged): forget old button/stick state so nothing sticks
+        if (Connected) AppLog.Write("controller disconnected");
+        Connected = false;
+        prev = 0; stickDir = 0; comboSince = null;
+        nextScan = DateTime.UtcNow.AddSeconds(1);
     }
 
     void Handle(XState s)

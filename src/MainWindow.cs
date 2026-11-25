@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Threading;
 
 namespace MegaHubPlus;
 
@@ -21,9 +22,23 @@ public class MainWindow : Window
         base.Content = root;
         pad = new Gamepad(k => { if (IsActive && Content is IKeyHandler h) h.OnKey(k); }, () => Environment.Exit(0));
         hints = new HintBar(() => pad.Connected, () => pad.Kind);
-        Opened += (_, _) => { if (st.ShellMode) ApplyMode(); };
+        Opened += (_, _) =>
+        {
+            if (st.ShellMode) ApplyMode();
+            // stayed up for 8 seconds = a good start
+            var ok = new DispatcherTimer { Interval = TimeSpan.FromSeconds(8) };
+            ok.Tick += (_, _) => { ok.Stop(); Startup.MarkOk(); };
+            ok.Start();
+            if (Startup.Smoke)
+            {
+                var done = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+                done.Tick += (_, _) => { AppLog.Write("smoke test ok"); Environment.Exit(0); };
+                done.Start();
+            }
+        };
         ApplyMode();
-        if (st.Look == null) ShowPicker(); else ShowLook();
+        if (Startup.SafeMode) ShowSafe();
+        else if (st.Look == null) ShowPicker(); else ShowLook();
     }
 
     // current screen sits under the hint bar
@@ -35,6 +50,29 @@ public class MainWindow : Window
             root.Children.Clear();
             if (value is Control c) { root.Children.Add(c); root.Children.Add(hints); }
         }
+    }
+
+    void ShowSafe()
+    {
+        Content = new SafeView(
+            () => { Startup.SafeMode = false; Startup.MarkOk(); if (st.Look == null) ShowPicker(); else ShowLook(); },
+            () =>
+            {
+                ShellControl.Disable();
+                if (!ShellControl.ExplorerRunning()) ShellControl.StartExplorer();
+                st.ShellMode = false; st.Save(); ApplyMode();
+                Startup.SafeMode = false; Startup.MarkOk();
+                if (st.Look == null) ShowPicker(); else ShowLook();
+            },
+            () =>
+            {
+                st.Look = null; st.ShellMode = false; st.Shape = TileShape.Short; st.Save(); ApplyMode();
+                ShellControl.Disable();
+                Startup.SafeMode = false; Startup.MarkOk();
+                ShowPicker();
+            },
+            () => Environment.Exit(0));
+        hints.Set(("A", "Enter", "Select"), ("▲▼", "↑↓", "Move"));
     }
 
     void ShowPicker() { Content = new PickerView(kind => { st.Look = kind; st.Save(); ShowLook(); }); hints.Set(("A", "Enter", "Choose"), ("◀▶", "←→", "Move")); }

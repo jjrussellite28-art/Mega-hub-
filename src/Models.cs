@@ -38,9 +38,19 @@ public class AppSettings
 
     public static AppSettings Load()
     {
-        try { if (File.Exists(FilePath)) return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new(); }
-        catch { }
-        return new();
+        try
+        {
+            if (!File.Exists(FilePath)) return new();
+            try { return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new(); }
+            catch (Exception ex)
+            {
+                // broken settings file: keep a copy, start fresh instead of crashing
+                AppLog.Write("settings file was broken, reset: " + ex.Message);
+                try { File.Move(FilePath, FilePath + ".bad-" + DateTime.Now.ToString("yyyyMMdd-HHmmss"), true); } catch { }
+                return new();
+            }
+        }
+        catch { return new(); }
     }
 
     public void Save()

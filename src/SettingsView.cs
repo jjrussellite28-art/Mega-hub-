@@ -100,6 +100,7 @@ public class SettingsView : Grid, IKeyHandler
         {
             DoUpdate();
         }));
+        power.Children.Add(Option("Copy log", false, () => { _ = CopyLog(); }));
         power.Children.Add(Option("Quit Mega Hub +", false, () => Environment.Exit(0)));
         power.Children.Add(Option("Uninstall...", false, () => { confirmUninstall = true; status.Text = ""; Build(); }));
         col.Children.Add(power);
@@ -160,7 +161,33 @@ public class SettingsView : Grid, IKeyHandler
         Build();
     }
 
-    // Downloads the newest installer from GitHub, runs it quietly, and closes this app so it can be replaced.
+    async System.Threading.Tasks.Task CopyLog()
+    {
+        try
+        {
+            var text = AppLog.Tail(200);
+            var cb = TopLevel.GetTopLevel(this)?.Clipboard;
+            if (cb != null && text.Length > 0) { await cb.SetTextAsync(text); status.Text = "Log copied. Paste it to send it."; }
+            else status.Text = "Log file is here: " + AppLog.FilePath;
+        }
+        catch (Exception ex) { status.Text = "Could not copy the log: " + ex.Message; }
+        Build();
+    }
+
+    static void VerifyInstaller(string file, long size, string? digest)
+    {
+        var fi = new FileInfo(file);
+        if (fi.Length < 5_000_000 || (size > 0 && fi.Length != size)) throw new Exception("the download is incomplete");
+        var bytes = File.ReadAllBytes(file);
+        if (bytes.Length < 2 || bytes[0] != (byte)'M' || bytes[1] != (byte)'Z') throw new Exception("the download is not a Windows program");
+        if (digest != null && digest.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase))
+        {
+            var h = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes));
+            if (!h.Equals(digest.Substring(7), StringComparison.OrdinalIgnoreCase)) throw new Exception("the download does not match GitHub's checksum");
+        }
+    }
+
+    // Downloads the newest installer from GitHub, checks it, runs it quietly, and closes this app so it can be replaced.
     void DoUpdate()
     {
         if (updating) return;
@@ -169,25 +196,41 @@ public class SettingsView : Grid, IKeyHandler
         Build();
         System.Threading.Tasks.Task.Run(async () =>
         {
+            var file = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "MegaHubPlus-Update.exe");
             try
             {
-                var file = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "MegaHubPlus-Update.exe");
-                using (var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromMinutes(5) })
+                using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+                http.DefaultRequestHeaders.UserAgent.ParseAdd("MegaHubPlus-Updater");
+                var json = await http.GetStringAsync("https://api.github.com/repos/jjrussellite28-art/Mega-hub-/releases/tags/Beta");
+                using var doc = System.Text.Json.JsonDocument.Parse(json);
+                string? url = null; long size = 0; string? digest = null;
+                foreach (var a in doc.RootElement.GetProperty("assets").EnumerateArray())
+                    if (a.GetProperty("name").GetString() == "MegaHubPlus-Setup.exe")
+                    {
+                        url = a.GetProperty("browser_download_url").GetString();
+                        size = a.GetProperty("size").GetInt64();
+                        if (a.TryGetProperty("digest", out var d) && d.ValueKind == System.Text.Json.JsonValueKind.String) digest = d.GetString();
+                        break;
+                    }
+                if (url == null) throw new Exception("no installer found on GitHub");
+                using (var resp = await http.GetAsync(url))
                 {
-                    http.DefaultRequestHeaders.UserAgent.ParseAdd("MegaHubPlus-Updater");
-                    using var resp = await http.GetAsync("https://github.com/jjrussellite28-art/Mega-hub-/releases/download/Beta/MegaHubPlus-Setup.exe");
                     resp.EnsureSuccessStatusCode();
-                    await using var fs = System.IO.File.Create(file);
+                    await using var fs = File.Create(file);
                     await resp.Content.CopyToAsync(fs);
                 }
+                VerifyInstaller(file, size, digest);
+                AppLog.Write("update: downloaded and checked " + size + " bytes");
                 Avalonia.Threading.Dispatcher.UIThread.Post(() => { status.Text = "Installing the update. Mega Hub + will restart."; Build(); });
                 await System.Threading.Tasks.Task.Delay(800);
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(file, "/SILENT /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS") { UseShellExecute = true });
+                Process.Start(new ProcessStartInfo(file, "/SILENT /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS") { UseShellExecute = true });
                 ShellControl.SkipRestore = true;
                 Environment.Exit(0);
             }
             catch (Exception ex)
             {
+                AppLog.Write("update failed: " + ex.Message);
+                try { File.Delete(file); } catch { }
                 Avalonia.Threading.Dispatcher.UIThread.Post(() => { updating = false; status.Text = "Update failed: " + ex.Message + " (nothing was changed)"; Build(); });
             }
         });

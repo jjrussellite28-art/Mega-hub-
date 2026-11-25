@@ -27,6 +27,16 @@ jobs:
           -p:IncludeNativeLibrariesForSelfExtract=true
           -o out
 
+      - name: Smoke test (app must start, stay up and exit cleanly)
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath "out\MegaHubPlus.exe" -ArgumentList "--smoke-test" -PassThru
+          $null = $p.Handle
+          if (-not $p.WaitForExit(90000)) { $p.Kill(); Write-Host "::error::app did not exit in 90 seconds"; exit 1 }
+          Write-Host "exit code $($p.ExitCode)"
+          if (Test-Path "$env:APPDATA\MegaHubPlus\logs\run.log") { Get-Content "$env:APPDATA\MegaHubPlus\logs\run.log" -Tail 20 }
+          if ($p.ExitCode -ne 0) { exit 1 }
+
       - name: Build installer
         shell: pwsh
         run: |
