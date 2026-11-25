@@ -14,6 +14,11 @@ class Program
             Args = args,
             ShutdownMode = ShutdownMode.OnLastWindowClose,
         };
+        string log = Path.Combine(Directory.GetCurrentDirectory(), "..", "run.log");
+        void Log(string m) { try { File.AppendAllText(log, DateTime.Now.ToString("HH:mm:ss ") + m + "\n"); } catch { } }
+        Log("start");
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => Log("unhandled: " + e.ExceptionObject);
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => Log("exit\n" + Environment.StackTrace);
         try
         {
             BuildAvaloniaApp().SetupWithLifetime(lifetime);
