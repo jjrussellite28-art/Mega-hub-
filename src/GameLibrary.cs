@@ -68,7 +68,7 @@ public static class GameLibrary
                         || name.StartsWith("Steam Linux Runtime", StringComparison.OrdinalIgnoreCase)) continue;
                     var pal = Palette[int.Parse(id) % Palette.Length];
                     list.Add(new Game(name, pal[0], pal[1], id,
-                        FindArt(steam, id, "library_600x900"), FindArt(steam, id, "library_hero"), FindArt(steam, id, "library_logo", "png")));
+                        FindArt(steam, id, "library_600x900"), FindArt(steam, id, "library_hero"), FindArt(steam, id, "logo", "png")));
                 }
             }
             Info = "Steam found at " + steam + ". Libraries checked: " + libs.Count + ". Installed games found: " + list.Count + ".";
