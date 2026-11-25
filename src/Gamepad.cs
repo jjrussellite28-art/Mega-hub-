@@ -23,6 +23,8 @@ public class Gamepad
     DateTime nextRepeat;
 
     public bool Connected { get; private set; }
+    public string Kind { get; private set; } = "Xbox";
+    readonly SdlPad sdlPad = new();
 
     public Gamepad(Action<Key> press, Action? emergencyQuit = null)
     {
@@ -35,8 +37,14 @@ public class Gamepad
     void Poll()
     {
         XState s;
-        try { Connected = false; for (int i = 0; i < 4; i++) if (XInputGetState(i, out s) == 0) { Connected = true; Handle(s); return; } }
-        catch { timer.Stop(); }
+        try { Connected = false; for (int i = 0; i < 4; i++) if (XInputGetState(i, out s) == 0) { Connected = true; Kind = "Xbox"; Handle(s); return; } }
+        catch { }
+        // no Xbox-style pad: try PlayStation / Nintendo / other pads through SDL
+        if (sdlPad.TryRead(out var b, out var lx))
+        {
+            Connected = true; Kind = sdlPad.Kind;
+            Handle(new XState { Buttons = b, LX = lx });
+        }
     }
 
     void Handle(XState s)

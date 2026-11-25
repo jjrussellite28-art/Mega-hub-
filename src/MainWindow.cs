@@ -20,7 +20,7 @@ public class MainWindow : Window
         KeyDown += OnKeyDown;
         base.Content = root;
         pad = new Gamepad(k => { if (IsActive && Content is IKeyHandler h) h.OnKey(k); }, () => Environment.Exit(0));
-        hints = new HintBar(() => pad.Connected);
+        hints = new HintBar(() => pad.Connected, () => pad.Kind);
         Opened += (_, _) => { if (st.ShellMode) ApplyMode(); };
         ApplyMode();
         if (st.Look == null) ShowPicker(); else ShowLook();
