@@ -29,21 +29,22 @@ public static class Ui
         GradientStops = new GradientStops { new GradientStop(Color.Parse(a), 0), new GradientStop(Color.Parse(b), 1) },
     };
 
+    const double Scale = 1.4;   // posters are big enough that a shape change is clearly visible
     public static (double w, double h) Size(TileShape s, Game? g = null)
     {
-        const double H = 227;
+        const double H = 227 * Scale;
         switch (s)
         {
-            case TileShape.Wide: return (300, 169);          // 16:9
-            case TileShape.Poster: return (150, 225);        // 2:3
-            case TileShape.Square: return (200, 200);        // 1:1
-            case TileShape.Retro: return (260, 195);         // 4:3
-            case TileShape.Slim: return (128, 228);          // 9:16
+            case TileShape.Wide: return (300 * Scale, 169 * Scale);          // 16:9
+            case TileShape.Poster: return (150 * Scale, 225 * Scale);        // 2:3
+            case TileShape.Square: return (200 * Scale, 200 * Scale);        // 1:1
+            case TileShape.Retro: return (260 * Scale, 195 * Scale);         // 4:3
+            case TileShape.Slim: return (128 * Scale, 228 * Scale);          // 9:16
             case TileShape.Original:
                 var bm = GameLibrary.LoadBitmap(g?.CoverPath);
-                if (bm != null && bm.Size.Height > 0) return (Math.Clamp(H * bm.Size.Width / bm.Size.Height, 120, 300), H);
-                return (170, H);
-            default: return (170, 227);                      // Box cover 3:4
+                if (bm != null && bm.Size.Height > 0) return (Math.Clamp(H * bm.Size.Width / bm.Size.Height, 120 * Scale, 300 * Scale), H);
+                return (170 * Scale, H);
+            default: return (170 * Scale, 227 * Scale);                      // Box cover 3:4
         }
     }
 

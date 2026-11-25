@@ -167,7 +167,15 @@ public class ConsoleRowLook : LookBase
         MenuChanged?.Invoke(false);
     }
 
-    int Cols => S.Shape switch { TileShape.Wide => 4, TileShape.Retro => 5, TileShape.Slim => 8, _ => 6 };
+    int Cols
+    {
+        get
+        {
+            if (Bounds.Width < 200) return 4;
+            var (w, _) = Ui.Size(S.Shape, Games.Length > 0 ? Games[Sel] : null);
+            return Math.Max(2, (int)((Bounds.Width - 90) / (w * 1.1 + 18)));
+        }
+    }
 
     int VisibleRows
     {

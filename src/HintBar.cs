@@ -17,11 +17,13 @@ public class HintBar : Border
     bool lastPad;
     string lastKind = "Xbox";
 
-    public HintBar(Func<bool> padConnected, Func<string> padKind)
+    readonly Action<Avalonia.Input.Key>? press;
+
+    public HintBar(Func<bool> padConnected, Func<string> padKind, Action<Avalonia.Input.Key>? press = null)
     {
+        this.press = press;
         this.padConnected = padConnected;
         this.padKind = padKind;
-        IsHitTestVisible = false;
         HorizontalAlignment = HorizontalAlignment.Right;
         VerticalAlignment = VerticalAlignment.Bottom;
         Margin = new Thickness(0, 0, 24, 14);
@@ -53,19 +55,28 @@ public class HintBar : Border
         items.Children.Clear();
         foreach (var h in hints)
         {
+            // always shown as controller buttons (Xbox by default): A = select, B = back
+            var g = Glyph(h.pad);
+            var xbox = lastKind == "Xbox" || !lastPad;
             var badge = new Border
             {
-                Background = Ui.B(lastPad ? "#FFFFFF" : "#44FFFFFF"),
-                CornerRadius = new CornerRadius(lastPad && Glyph(h.pad).Length == 1 ? 12 : 6),
-                MinWidth = 24, Height = 24, Padding = new Thickness(6, 0),
+                Background = Ui.B(xbox && h.pad == "A" ? "#2FB457" : xbox && h.pad == "B" ? "#D9453F" : "#FFFFFF"),
+                CornerRadius = new CornerRadius(g.Length == 1 ? 14 : 8),
+                MinWidth = 28, Height = 28, Padding = new Thickness(7, 0),
                 VerticalAlignment = VerticalAlignment.Center,
-                Child = Ui.Text(lastPad ? Glyph(h.pad) : h.key, 12, true, lastPad ? "#111111" : "#FFFFFF"),
+                Child = Ui.Text(g, 13, true, xbox && (h.pad == "A" || h.pad == "B") ? "#FFFFFF" : "#111111"),
             };
-            items.Children.Add(badge);
-            var label = Ui.Text(h.what, 13, false, "#DDFFFFFF");
-            label.Margin = new Thickness(6, 0, 16, 0);
-            label.VerticalAlignment = VerticalAlignment.Center;
-            items.Children.Add(label);
+            var label = Ui.Text(h.what, 14, false, "#EEFFFFFF");
+            label.Margin = new Thickness(8, 0, 0, 0);
+            var item = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 18, 0), Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand) };
+            item.Children.Add(badge);
+            item.Children.Add(label);
+            if (h.pad == "A" || h.pad == "B")
+            {
+                var key = h.pad == "A" ? Avalonia.Input.Key.Enter : Avalonia.Input.Key.Escape;
+                item.PointerPressed += (_, _) => press?.Invoke(key);
+            }
+            items.Children.Add(item);
         }
     }
 }

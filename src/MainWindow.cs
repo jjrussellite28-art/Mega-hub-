@@ -21,7 +21,7 @@ public class MainWindow : Window
         KeyDown += OnKeyDown;
         base.Content = root;
         pad = new Gamepad(k => { if (IsActive && Content is IKeyHandler h) h.OnKey(k); }, () => Environment.Exit(0));
-        hints = new HintBar(() => pad.Connected, () => pad.Kind);
+        hints = new HintBar(() => pad.Connected, () => pad.Kind, k => { if (Content is IKeyHandler h) h.OnKey(k); });
         Opened += (_, _) =>
         {
             if (st.ShellMode) ApplyMode();
@@ -80,7 +80,7 @@ public class MainWindow : Window
         LookBase look = new ConsoleRowLook(st);
         look.OpenSettings = ShowSettings;
         Content = look;
-        void BrowseHints() => hints.Set(("A", "Enter", "Open"), ("◀▶▲▼", "Arrows", "Browse"), ("≡", "S", "Settings"));
+        void BrowseHints() => hints.Set(("A", "Enter", "Open"));
         BrowseHints();
         if (look is ConsoleRowLook crl)
             crl.MenuChanged = open => { if (open) hints.Set(("A", "Enter", "Choose"), ("B", "Esc", "Close")); else BrowseHints(); };
