@@ -58,3 +58,8 @@ Fixed along the way: Program.cs startup, and RollForward=LatestMajor so it runs 
 - Not uploaded yet: laptop browser and this session are not signed in to GitHub. Jake will sign in later, then upload the project files (skip bin/ and obj/).
 - License not chosen yet (leaning MIT; GPL-3.0 if forks must stay open).
 - Controller support (Xbox/XInput) built but untested with a real controller.
+
+## Tested (2026-11-25)
+- Play / Enter launches Lego Batman through Steam. Works (Steam asked for a one-time permission first).
+- Automatic Windows build on GitHub passes (artifact: MegaHubPlus-windows). Downloaded .exe not yet tested.
+- Still untested with a real controller (Xbox-style via XInput).
