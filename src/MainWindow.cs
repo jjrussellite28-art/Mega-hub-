@@ -80,11 +80,17 @@ public class MainWindow : Window
     {
         LookBase look = new ConsoleRowLook(st);
         look.OpenSettings = ShowSettings;
+        if (look is ConsoleRowLook c0) c0.OpenGame = ShowGame;
         Content = look;
         void BrowseHints() => hints.Set(("A", "Enter", "Open"));
         BrowseHints();
         if (look is ConsoleRowLook crl)
             crl.MenuChanged = open => { if (open) hints.Set(("A", "Enter", "Choose"), ("B", "Esc", "Close")); else BrowseHints(); };
+    }
+
+    void ShowGame(Game g)
+    {
+        Content = new GameView(g, ShowLook, hints);
     }
 
     void ShowSetup()

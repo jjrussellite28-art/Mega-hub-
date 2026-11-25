@@ -23,6 +23,7 @@ public class ConsoleRowLook : LookBase
 
     public ConsoleRowLook(AppSettings s) : base(s)
     {
+        Sel = Math.Clamp(LastSel, 0, Math.Max(Games.Length - 1, 0));
         RowDefinitions = new RowDefinitions("Auto,*,Auto");
         SizeChanged += (_, _) => Refresh();
 
@@ -301,9 +302,13 @@ public class ConsoleRowLook : LookBase
         return items;
     }
 
+    public Action<Game>? OpenGame;
+    public static int LastSel;
+
     void OpenMenu()
     {
         if (Games.Length == 0) return;
+        if (OpenGame != null) { LastSel = Sel; OpenGame(Games[Sel]); return; }
         menuOpen = true; menuIdx = 0;
         BuildMenu();
         MenuChanged?.Invoke(true);

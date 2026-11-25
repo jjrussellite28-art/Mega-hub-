@@ -66,9 +66,12 @@ public static class GameLibrary
                     if (name.StartsWith("Steamworks", StringComparison.OrdinalIgnoreCase)
                         || name.StartsWith("Proton", StringComparison.OrdinalIgnoreCase)
                         || name.StartsWith("Steam Linux Runtime", StringComparison.OrdinalIgnoreCase)) continue;
+                    var instDir = Regex.Match(text, "\"installdir\"\\s+\"(.*?)\"").Groups[1].Value;
+                    long.TryParse(Regex.Match(text, "\"SizeOnDisk\"\\s+\"(\\d+)\"").Groups[1].Value, out var sizeOnDisk);
+                    var folder = instDir == "" ? null : Path.Combine(apps, "common", instDir);
                     var pal = Palette[int.Parse(id) % Palette.Length];
                     list.Add(new Game(name, pal[0], pal[1], id,
-                        FindArt(steam, id, "library_600x900"), FindArt(steam, id, "library_hero"), FindArt(steam, id, "logo", "png")));
+                        FindArt(steam, id, "library_600x900"), FindArt(steam, id, "library_hero"), FindArt(steam, id, "logo", "png"), folder, sizeOnDisk));
                 }
             }
             Info = "Steam found at " + steam + ". Libraries checked: " + libs.Count + ". Installed games found: " + list.Count + ".";
