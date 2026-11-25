@@ -123,3 +123,10 @@ Fixed along the way: Program.cs startup, and RollForward=LatestMajor so it runs 
 ## Wanted (from Jake, Playnite Add-ons screen + IGDB, Nov 25) - not built yet
 - IGDB metadata source inside Mega Hub + (covers, wallpapers/artwork, descriptions, also for custom games). Needs a free Twitch developer Client ID + Secret (Jake makes the account; app gets a place to enter them in Settings)
 - Add-ons & Plugins screen laid out like Playnite's Add-ons: Updates, Extensions settings (Libraries, Metadata Sources > IGDB), Installed and Browse, each split into Libraries / Metadata Sources / Generic / Themes (Desktop) / Themes (Fullscreen)
+
+## Wanted (from Jake, Playnite game detail page, Nov 25) - not built yet
+- Game page: opens from a game; big blurred game wallpaper behind, title, Play and More buttons, cover at the right
+- Details list: Time Played, Recent Activity, Installation Folder, Install Size, Library, Platform, Genre, Developer, Publisher, Release Date, Features, Links
+- Description text on the right
+- Data: Steam store (store.steampowered.com/api/appdetails, no key needed: description, genres, developer, publisher, release date, features) plus local Steam files (folder, size); IGDB later for non-Steam games
+- Build rule from Jake: finish and ship through CI and the Update button, no need to have his PC on while I work
