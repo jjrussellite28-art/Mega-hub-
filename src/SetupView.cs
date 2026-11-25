@@ -85,7 +85,11 @@ public class SetupView : Grid, IKeyHandler
         col.Children.Add(dots);
 
         if (step == 0)
-            col.Children.Add(Ui.Text("Mega Hub +", 44, true));
+        {
+            var brand = Ui.Text("Mega Hub +", 44, true);
+            brand.HorizontalAlignment = HorizontalAlignment.Center;
+            col.Children.Add(brand);
+        }
         var title = Ui.Text(st.Title, step == 0 ? 30 : 38, true);
         title.HorizontalAlignment = HorizontalAlignment.Center;
         title.Margin = new Thickness(0, 6, 0, 4);
@@ -94,7 +98,6 @@ public class SetupView : Grid, IKeyHandler
         line.HorizontalAlignment = HorizontalAlignment.Center;
         line.Margin = new Thickness(0, 0, 0, 34);
         col.Children.Add(line);
-        ((TextBlock)col.Children[0] is TextBlock t0 && step == 0 ? t0 : null)?.SetValue(HorizontalAlignmentProperty, HorizontalAlignment.Center);
 
         var row = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Center, MaxWidth = 1100 };
         for (int i = 0; i < st.Cards.Count; i++) row.Children.Add(MakeCard(st, i));
