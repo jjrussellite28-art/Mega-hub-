@@ -41,17 +41,6 @@ public class SetupView : Grid, IKeyHandler
             shapes.Select(x => new Card(x.name, x.sub, Array.Empty<string>(), null, s.Shape == x.v, "")).ToList(),
             i => { s.Shape = shapes[i].v; }, true));
 
-        var walls = new (WallFit v, string name, string sub)[]
-        {
-            (WallFit.Fill, "Fill the screen", "The whole picture, edge to edge"),
-            (WallFit.Crop, "Crop to fit", "Zoomed to fill, edges trimmed"),
-            (WallFit.Fit, "Show whole picture", "Nothing cut off, soft edges"),
-            (WallFit.Cover, "Cover art (blurred)", "The poster, softly blurred"),
-        };
-        steps.Add(new("Pick a wallpaper style", "This is the picture behind your games.", "Settings › Appearance › Wallpaper",
-            walls.Select(x => new Card(x.name, x.sub, Array.Empty<string>(), null, s.Wall == x.v, "")).ToList(),
-            i => { s.Wall = walls[i].v; }));
-
         steps.Add(new("How should Mega Hub + run?", "You can switch any time.", "Settings › Startup & Modes",
             new()
             {
