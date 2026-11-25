@@ -88,8 +88,8 @@ public static class Ui
     public static TextBlock Clock()
     {
         var tb = Text(DateTime.Now.ToString("h:mm"), 15, true);
-        var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(20) };
-        timer.Tick += (_, _) => tb.Text = DateTime.Now.ToString("h:mm");
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        timer.Tick += (_, _) => { var t = DateTime.Now.ToString("h:mm"); if (tb.Text != t) tb.Text = t; };
         timer.Start();
         return tb;
     }
