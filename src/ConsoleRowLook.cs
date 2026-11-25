@@ -11,6 +11,7 @@ public class ConsoleRowLook : LookBase
 {
     readonly StackPanel gridHost = new() { Margin = new Thickness(24, 0, 24, 0), VerticalAlignment = VerticalAlignment.Top };
     readonly TextBlock title = Ui.Text("", 34, true);
+    readonly Image logo = new() { Stretch = Stretch.Uniform, StretchDirection = StretchDirection.DownOnly, HorizontalAlignment = HorizontalAlignment.Left, MaxHeight = 150, MaxWidth = 520, IsVisible = false };
     readonly Border dim = new();        // light tint over the wallpaper
     readonly Border hero = new();       // blurred copy fills the whole screen
     readonly Border heroSharp = new();  // the whole picture, nothing cut off
@@ -96,6 +97,8 @@ public class ConsoleRowLook : LookBase
 
         // just the selected game's name at the bottom; Play and other actions live in the menu on the poster
         var bottom = new StackPanel { Margin = new Thickness(40, 0, 40, 36), VerticalAlignment = VerticalAlignment.Bottom };
+        RenderOptions.SetBitmapInterpolationMode(logo, Avalonia.Media.Imaging.BitmapInterpolationMode.HighQuality);
+        bottom.Children.Add(logo);
         bottom.Children.Add(title);
         SetRow(bottom, 2);
         Children.Add(bottom);
@@ -184,7 +187,7 @@ public class ConsoleRowLook : LookBase
             Background = Ui.B("#060A14");
             hero.Background = null;
             heroSharp.Background = null;
-            title.Text = "No games found";
+            title.Text = "No games found"; title.IsVisible = true; logo.IsVisible = false;
             return;
         }
         var g = Games[Sel];
@@ -229,7 +232,10 @@ public class ConsoleRowLook : LookBase
                 heroSharp.Height = Bounds.Width * bm.Size.Height / bm.Size.Width;
             }
         }
-        title.Text = g.Title;
+        // the game's own title logo (like on Steam) when it has one, otherwise its name
+        var lg = GameLibrary.LoadBitmap(g.LogoPath);
+        logo.Source = lg; logo.IsVisible = lg != null;
+        title.Text = g.Title; title.IsVisible = lg == null;
 
         int cols = Cols, rows = VisibleRows, selRow = Sel / cols;
         if (selRow < top) top = selRow;

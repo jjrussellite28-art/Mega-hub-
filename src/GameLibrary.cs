@@ -68,7 +68,7 @@ public static class GameLibrary
                         || name.StartsWith("Steam Linux Runtime", StringComparison.OrdinalIgnoreCase)) continue;
                     var pal = Palette[int.Parse(id) % Palette.Length];
                     list.Add(new Game(name, pal[0], pal[1], id,
-                        FindArt(steam, id, "library_600x900"), FindArt(steam, id, "library_hero")));
+                        FindArt(steam, id, "library_600x900"), FindArt(steam, id, "library_hero"), FindArt(steam, id, "library_logo", "png")));
                 }
             }
             Info = "Steam found at " + steam + ". Libraries checked: " + libs.Count + ". Installed games found: " + list.Count + ".";
@@ -77,19 +77,30 @@ public static class GameLibrary
         catch (Exception e) { Info = "Steam reading failed: " + e.Message; return Array.Empty<Game>(); }
     }
 
-    static string? FindArt(string steam, string appId, string kind)
+    static string? FindArt(string steam, string appId, string kind, string ext = "jpg")
     {
         try
         {
             var root = Path.Combine(steam, "appcache", "librarycache");
-            var old = Path.Combine(root, appId + "_" + kind + ".jpg");
+            var old = Path.Combine(root, appId + "_" + kind + "." + ext);
             if (File.Exists(old)) return old;
             var dir = Path.Combine(root, appId);
             if (Directory.Exists(dir))
-                return Directory.EnumerateFiles(dir, kind + ".jpg", SearchOption.AllDirectories).FirstOrDefault();
+                return Directory.EnumerateFiles(dir, kind + "." + ext, SearchOption.AllDirectories).FirstOrDefault();
         }
         catch { }
         return null;
+    }
+
+    public static Bitmap? LoadBitmap(string? path)
+    {
+        if (path == null) return null;
+        if (!bitmaps.TryGetValue(path, out var bmp))
+        {
+            try { bmp = new Bitmap(path); } catch { bmp = null; }
+            bitmaps[path] = bmp;
+        }
+        return bmp;
     }
 
     public static IBrush? ArtBrush(string? path, Stretch stretch = Stretch.UniformToFill)
