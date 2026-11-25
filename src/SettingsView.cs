@@ -12,6 +12,7 @@ public class SettingsView : Grid, IKeyHandler
 {
     readonly AppSettings s;
     readonly Action back;
+    readonly Action applyMode;
     readonly StackPanel col = new() { Margin = new Thickness(60, 40) };
     readonly TextBlock status = Ui.Text("", 14, false, "#F5C542");
     bool confirmUninstall;
@@ -19,10 +20,11 @@ public class SettingsView : Grid, IKeyHandler
     readonly List<List<(Border box, Action act)>> grid = new();
     int fr, fc;
 
-    public SettingsView(AppSettings s, Action back)
+    public SettingsView(AppSettings s, Action back, Action applyMode)
     {
         this.s = s;
         this.back = back;
+        this.applyMode = applyMode;
         Background = Ui.Grad("#0B0F1A", "#1A1030");
         Children.Add(col);
         Build();
@@ -48,6 +50,16 @@ public class SettingsView : Grid, IKeyHandler
             shapes.Children.Add(Option(name, s.Shape == shape, () => { s.Shape = shape; s.Save(); Build(); }));
         col.Children.Add(shapes);
 
+        col.Children.Add(Section("Mode"));
+        grid.Add(new());
+        var modes = new StackPanel { Orientation = Orientation.Horizontal };
+        modes.Children.Add(Option("App mode (window)", !s.ShellMode, () => { s.ShellMode = false; s.Save(); applyMode(); Build(); }));
+        modes.Children.Add(Option("Shell mode (full screen)", s.ShellMode, () => { s.ShellMode = true; s.Save(); applyMode(); Build(); }));
+        col.Children.Add(modes);
+        var modeHelp = Ui.Text("Stuck? Press Ctrl+Alt+Q, or hold Back + Start on the controller for 3 seconds.", 13, false, "#CCFFFFFF");
+        modeHelp.Margin = new Thickness(4, 4, 0, 0);
+        col.Children.Add(modeHelp);
+
         col.Children.Add(Section("Games"));
         var info = Ui.Text(GameLibrary.Games.Length >= 0 ? GameLibrary.Info : "", 14, false, "#CCFFFFFF");
         info.Margin = new Thickness(4, 0, 0, 0);
@@ -61,6 +73,7 @@ public class SettingsView : Grid, IKeyHandler
             status.Text = "Not connected yet. Updates will work once Mega Hub Plus is on GitHub.";
             Build();
         }));
+        power.Children.Add(Option("Quit Mega Hub Plus", false, () => Environment.Exit(0)));
         power.Children.Add(Option("Uninstall...", false, () => { confirmUninstall = true; status.Text = ""; Build(); }));
         col.Children.Add(power);
 

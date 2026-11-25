@@ -29,6 +29,8 @@ public class AppSettings
 {
     public LookKind? Look { get; set; }
     public TileShape Shape { get; set; } = TileShape.Short;
+    // false = App mode (normal window). true = Shell mode (full screen, always on top). Switch any time.
+    public bool ShellMode { get; set; }
 
     static string FilePath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),

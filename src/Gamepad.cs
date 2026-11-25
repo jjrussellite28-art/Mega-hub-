@@ -15,6 +15,8 @@ public class Gamepad
     static extern int XInputGetState(int user, out XState state);
 
     readonly Action<Key> press;
+    readonly Action? emergencyQuit;
+    DateTime? comboSince;
     readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(16) };
     ushort prev;
     int stickDir; // -1 left, 1 right, 0 none
@@ -22,9 +24,10 @@ public class Gamepad
 
     public bool Connected { get; private set; }
 
-    public Gamepad(Action<Key> press)
+    public Gamepad(Action<Key> press, Action? emergencyQuit = null)
     {
         this.press = press;
+        this.emergencyQuit = emergencyQuit;
         timer.Tick += (_, _) => Poll();
         timer.Start();
     }
@@ -39,6 +42,13 @@ public class Gamepad
     void Handle(XState s)
     {
         ushort b = s.Buttons;
+        // emergency exit: hold Back + Start for 3 seconds
+        if ((b & 0x0030) == 0x0030)
+        {
+            comboSince ??= DateTime.UtcNow;
+            if (DateTime.UtcNow - comboSince.Value > TimeSpan.FromSeconds(3)) emergencyQuit?.Invoke();
+        }
+        else comboSince = null;
         ushort down = (ushort)(b & ~prev);
         prev = b;
         if ((down & 0x0004) != 0) press(Key.Left);   // dpad left
