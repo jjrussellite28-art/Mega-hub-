@@ -208,7 +208,8 @@ public class ConsoleRowLook : LookBase
         else if (S.Wall == WallFit.Fill)
         {
             // stretched to exactly the screen: nothing cut off, no borders, works at any size
-            hero.Background = GameLibrary.ArtBrush(path, Stretch.Fill) ?? Ui.Grad(g.C1, "#0B0F1A", false);
+            // the game's poster itself, stretched over the whole screen so every character on it shows
+            hero.Background = GameLibrary.ArtBrush(g.CoverPath ?? path, Stretch.Fill) ?? Ui.Grad(g.C1, "#0B0F1A", false);
         }
         else if (S.Wall == WallFit.Crop)
         {
