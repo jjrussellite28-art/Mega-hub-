@@ -24,7 +24,7 @@ public class PadTestView : Grid, IKeyHandler
         Background = Ui.Grad("#080C18", "#0A2460");
         var col = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(30) };
         col.Children.Add(Ui.Text("Button test", 34, true));
-        var sub = Ui.Text(PadIcons.Pretty(preset()) + ". Press any button on your controller or keyboard; it lights up. Press Esc / B to leave.", 16, false, "#CCFFFFFF");
+        var sub = Ui.Text(PadIcons.Pretty(preset()) + ". Press any button on your controller or keyboard; it lights up. Leave with Esc on the keyboard, or hold Back on the controller for 2 seconds.", 16, false, "#CCFFFFFF");
         sub.Margin = new Thickness(0, 4, 0, 24);
         col.Children.Add(sub);
 
@@ -70,8 +70,16 @@ public class PadTestView : Grid, IKeyHandler
         return new Tile(role, label, mask, box, img, up, down, bar);
     }
 
+    DateTime? backSince;
+
     void Tick()
     {
+        if ((Gamepad.LiveButtons & 0x0020) != 0 && (Gamepad.LiveButtons & 0x0010) == 0)
+        {
+            backSince ??= DateTime.UtcNow;
+            if (DateTime.UtcNow - backSince.Value > TimeSpan.FromSeconds(2)) { timer.Stop(); back(); return; }
+        }
+        else backSince = null;
         bool Key(string r) => r switch
         {
             "A" => keys.Contains(Avalonia.Input.Key.Enter),
@@ -102,8 +110,8 @@ public class PadTestView : Grid, IKeyHandler
 
     public void OnKey(Key key)
     {
-        if (key == Key.Escape && Gamepad.LiveButtons == 0) { back(); return; }
+        // Escape from the keyboard leaves; Escape made by the pad's B button just lights B up
+        if (key == Key.Escape && (Gamepad.LiveButtons & 0x2000) == 0) { back(); return; }
         keys.Add(key);
-        if (key == Key.Escape && (Gamepad.LiveButtons & 0x2000) == 0) back();
     }
 }
