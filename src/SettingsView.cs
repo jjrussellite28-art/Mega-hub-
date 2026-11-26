@@ -48,6 +48,57 @@ public class SettingsView : Grid, IKeyHandler
     Row Pick(string label, string[] names, int cur, Action<int> set) =>
         new(label, names[Math.Clamp(cur, 0, names.Length - 1)], () => { picker = (label, names, cur, set); pickIdx = Math.Clamp(cur, 0, names.Length - 1); Build(); });
 
+    // in-app folder browser (works with the controller): null path = the list of drives
+    bool browsing;
+    string? browsePath;
+    int browseIdx;
+
+    List<(string label, Action act)> BrowseEntries()
+    {
+        var l = new List<(string, Action)>();
+        if (browsePath != null)
+        {
+            var here = browsePath;
+            l.Add(("\u2713  Use this folder", () =>
+            {
+                if (!s.GameFolders.Contains(here, StringComparer.OrdinalIgnoreCase)) s.GameFolders.Add(here);
+                s.Save(); GameLibrary.Reload();
+                browsing = false;
+                status.Text = "Added. Games found now: " + GameLibrary.Games.Length;
+                Build();
+            }));
+            l.Add(("\u2190  Back", BrowseUp));
+            try
+            {
+                foreach (var d in Directory.EnumerateDirectories(here).OrderBy(x => x, StringComparer.OrdinalIgnoreCase).Take(300))
+                {
+                    var name = Path.GetFileName(d);
+                    try { if ((new DirectoryInfo(d).Attributes & (FileAttributes.Hidden | FileAttributes.System)) != 0) continue; } catch { continue; }
+                    var dir = d;
+                    l.Add(("\U0001F4C1  " + name, () => { browsePath = dir; browseIdx = 0; Build(); }));
+                }
+            }
+            catch { l.Add(("Can't open this folder", () => { })); }
+        }
+        else
+        {
+            foreach (var dr in Directory.GetLogicalDrives())
+            {
+                var drive = dr;
+                l.Add(("\U0001F4BE  " + drive, () => { browsePath = drive; browseIdx = 0; Build(); }));
+            }
+        }
+        return l;
+    }
+
+    void BrowseUp()
+    {
+        var parent = browsePath == null ? null : Directory.GetParent(browsePath)?.FullName;
+        browsePath = parent;
+        browseIdx = 0;
+        Build();
+    }
+
     string? editing;   // "id" or "secret" while typing a code
     int cat, ri;
     bool inRight;
@@ -96,7 +147,7 @@ public class SettingsView : Grid, IKeyHandler
                 break;
             case 2:
                 r.Add(new("Games found", GameLibrary.Info, null));
-                r.Add(new("Add a game folder", "Pick a folder with your games in it", () => { _ = AddFolder(); }));
+                r.Add(new("Add a game folder", "Pick a folder with your games in it", () => { browsing = true; browsePath = null; browseIdx = 0; Build(); }));
                 foreach (var gf in s.GameFolders.ToList())
                 {
                     var folder = gf;
@@ -259,7 +310,46 @@ public class SettingsView : Grid, IKeyHandler
         Grid.SetRow(scroll, 1);
         body.Children.Add(scroll);
 
-        if (picker != null)
+        if (browsing)
+        {
+            var entries = BrowseEntries();
+            browseIdx = Math.Clamp(browseIdx, 0, Math.Max(entries.Count - 1, 0));
+            var list = new StackPanel { Width = 560 };
+            list.Children.Add(Ui.Text("Pick the folder with your games", 22, true));
+            var where = Ui.Text(browsePath ?? "This PC", 14, false, "#CCFFFFFF");
+            where.Margin = new Thickness(0, 4, 0, 12);
+            list.Children.Add(where);
+            var items = new StackPanel();
+            for (int i = 0; i < entries.Count; i++)
+            {
+                int idx = i; var act = entries[i].act;
+                bool on = i == browseIdx;
+                var it = new Border
+                {
+                    Padding = new Thickness(18, 11), Margin = new Thickness(0, 0, 0, 4), CornerRadius = new CornerRadius(10),
+                    Background = Ui.B(on ? "#55408CFF" : "#22FFFFFF"), BorderBrush = Ui.B(on ? "#4C8DFF" : "#00000000"), BorderThickness = new Thickness(2),
+                    Child = Ui.Text(entries[i].label, 16, on),
+                };
+                it.PointerPressed += (_, e) => { browseIdx = idx; act(); e.Handled = true; };
+                items.Children.Add(it);
+            }
+            var sv = new ScrollViewer { Content = items, MaxHeight = 440, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto };
+            list.Children.Add(sv);
+            var bpanel = new Border
+            {
+                Background = Ui.B("#F0101A33"), BorderBrush = Ui.B("#664C8DFF"), BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(20), Padding = new Thickness(26), Child = list,
+                HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+                BoxShadow = BoxShadows.Parse("0 10 40 0 #99000000"),
+            };
+            var bshade = new Grid { Background = Ui.B("#AA000000") };
+            bshade.Children.Add(bpanel);
+            Grid.SetRowSpan(bshade, 2);
+            Children.Add(bshade);
+            // keep the highlighted row in view
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => { if (browseIdx < items.Children.Count) items.Children[browseIdx].BringIntoView(); });
+        }
+        else if (picker != null)
         {
             var (ptitle, names, cur, set) = picker.Value;
             var list = new StackPanel { Width = 420 };
@@ -479,6 +569,17 @@ public class SettingsView : Grid, IKeyHandler
     public void OnKey(Key key)
     {
         if (editing != null) return;
+        if (browsing)
+        {
+            var es = BrowseEntries();
+            if (key == Key.Up && browseIdx > 0) browseIdx--;
+            else if (key == Key.Down && browseIdx < es.Count - 1) browseIdx++;
+            else if (key == Key.Enter || key == Key.Space || key == Key.Right) { if (browseIdx < es.Count) es[browseIdx].act(); return; }
+            else if (key == Key.Escape || key == Key.Left) { if (browsePath == null) { browsing = false; Build(); } else BrowseUp(); return; }
+            else return;
+            Build();
+            return;
+        }
         if (picker != null)
         {
             var n = picker.Value.names.Length;
