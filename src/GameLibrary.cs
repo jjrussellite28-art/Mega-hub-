@@ -38,7 +38,7 @@ public static class GameLibrary
                 {
                     var exe = BestExe(d, Path.GetFileName(d));
                     if (exe == null) continue;
-                    var title = Path.GetFileName(d.TrimEnd('\', '/'));
+                    var title = Path.GetFileName(d.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
                     if (string.IsNullOrEmpty(title)) title = Path.GetFileNameWithoutExtension(exe);
                     var pal = Palette[(n++) % Palette.Length];
                     long size = 0; try { size = new FileInfo(exe).Length; } catch { }
