@@ -16,8 +16,8 @@ public class ConsoleRowLook : LookBase
     readonly Border hero = new();       // blurred copy fills the whole screen
     readonly Border heroSharp = new();  // the whole picture, nothing cut off
     int top;                       // first visible row of the poster grid
-    static readonly string[] TabNames = { "Favorites", "Games", "Media", "Store", "Friends" };
-    public static int LastTab = 1;
+    static readonly string[] TabNames = { "Games", "Media", "Store", "Friends" };
+    public static int LastTab = 0;
     int tab;
     StackPanel? tabsHost;
 
@@ -27,7 +27,8 @@ public class ConsoleRowLook : LookBase
     // which games the current tab shows (Media, Store and Friends have nothing behind them yet)
     void ApplyTab()
     {
-        Games = tab == 0 ? GameLibrary.Games.Where(IsFav).ToArray() : tab == 1 ? GameLibrary.Games : Array.Empty<Game>();
+        // starred games come first, the rest keep their order
+        Games = tab == 0 ? GameLibrary.Games.OrderBy(g => IsFav(g) ? 0 : 1).ToArray() : Array.Empty<Game>();
     }
 
     void BuildTabs()
@@ -57,7 +58,9 @@ public class ConsoleRowLook : LookBase
         var g = Games[Sel]; var k = FavKey(g);
         if (!S.Favorites.Remove(k)) S.Favorites.Add(k);
         S.Save();
-        if (tab == 0) { ApplyTab(); Sel = Math.Clamp(Sel, 0, Math.Max(Games.Length - 1, 0)); }
+        ApplyTab();
+        var at = Array.IndexOf(Games, g);   // the cursor follows the game to its new spot
+        Sel = at >= 0 ? at : 0;
         Refresh();
     }
     bool menuOpen;
@@ -282,7 +285,7 @@ public class ConsoleRowLook : LookBase
             Background = Ui.B("#060A14");
             hero.Background = null;
             heroSharp.Background = null;
-            title.Text = tab == 0 ? "No favorites yet. Press Y on a game to add it." : tab == 1 ? "No games found" : TabNames[tab] + " is coming soon";
+            title.Text = tab == 0 ? "No games found" : TabNames[tab] + " is coming soon";
             title.IsVisible = true; logo.IsVisible = false;
             return;
         }
