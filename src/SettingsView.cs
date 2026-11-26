@@ -38,6 +38,7 @@ public class SettingsView : Grid, IKeyHandler
     readonly Action back;
     readonly Action applyMode;
     readonly Action? runSetup;
+    readonly Action? openPadTest;
     readonly TextBlock status = Ui.Text("", 14, false, "#F5C542");
     bool confirmUninstall;
     bool confirmShell;
@@ -104,9 +105,10 @@ public class SettingsView : Grid, IKeyHandler
     bool inRight;
     List<Row> rows = new();
 
-    public SettingsView(AppSettings s, Action back, Action applyMode, Action? runSetup = null, int startCat = 0)
+    public SettingsView(AppSettings s, Action back, Action applyMode, Action? runSetup = null, int startCat = 0, Action? openPadTest = null)
     {
         this.runSetup = runSetup;
+        this.openPadTest = openPadTest;
         cat = startCat;
         this.s = s;
         this.back = back;
@@ -164,6 +166,7 @@ public class SettingsView : Grid, IKeyHandler
                     opts.AddRange(PadIcons.All);
                     var ci = Math.Max(0, opts.IndexOf(s.PadIcons ?? "auto"));
                     r.Add(Pick("Button icons", opts.Select(PadIcons.Pretty).ToArray(), ci, i => { s.PadIcons = opts[i]; s.Save(); }));
+                    if (openPadTest != null) r.Add(new("Test your buttons", "See every button light up", openPadTest));
                     notes.Add(("Automatic shows the buttons of the controller you plug in (Xbox, PlayStation, GameCube, Switch and more), and the keyboard when none is connected. Pick one to always use it.", "#CCFFFFFF"));
                 }
                 break;

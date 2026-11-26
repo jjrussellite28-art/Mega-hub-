@@ -100,9 +100,15 @@ public class MainWindow : Window
         Content = new SetupView(st, ApplyMode, ShowLook, hints, () => { Content = new SettingsView(st, ShowLook, ApplyMode, ShowSetup, 4); hints.Set(("A", "Enter", "Select"), ("B", "Esc", "Back")); });
     }
 
+    void ShowPadTest()
+    {
+        Content = new PadTestView(() => { ShowSettings(); }, () => PadIcons.Resolve(st.PadIcons, pad.Connected, pad.Preset));
+        hints.Set(("B", "Esc", "Back"));
+    }
+
     void ShowSettings()
     {
-        Content = new SettingsView(st, ShowLook, ApplyMode, ShowSetup);
+        Content = new SettingsView(st, ShowLook, ApplyMode, ShowSetup, 0, ShowPadTest);
         hints.Set(("A", "Enter", "Select"), ("B", "Esc", "Back"));
     }
 

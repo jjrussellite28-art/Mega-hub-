@@ -22,6 +22,11 @@ public class Gamepad
     int stickDir; // -1 left, 1 right, 0 none
     DateTime nextRepeat;
 
+    // what the pad is doing right now (for the button test screen)
+    public static ushort LiveButtons;
+    public static byte LiveLT, LiveRT;
+    public static short LiveLX, LiveLY, LiveRX, LiveRY;
+
     public bool Connected { get; private set; }
     public string Kind { get; private set; } = "Xbox";
     public string Preset { get; private set; } = "Xbox-Series";
@@ -61,6 +66,7 @@ public class Gamepad
     void Handle(XState s)
     {
         ushort b = s.Buttons;
+        LiveButtons = b; LiveLT = s.LT; LiveRT = s.RT; LiveLX = s.LX; LiveLY = s.LY; LiveRX = s.RX; LiveRY = s.RY;
         // emergency exit: hold Back + Start for 3 seconds
         if ((b & 0x0030) == 0x0030)
         {
