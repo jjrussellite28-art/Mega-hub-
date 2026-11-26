@@ -305,7 +305,7 @@ public class SettingsView : Grid, IKeyHandler
             var top = TopLevel.GetTopLevel(this);
             if (top == null) return;
             var res = await top.StorageProvider.OpenFolderPickerAsync(new Avalonia.Platform.Storage.FolderPickerOpenOptions { Title = "Pick the folder that holds your games", AllowMultiple = false });
-            var path = res.FirstOrDefault()?.TryGetLocalPath();
+            var path = Avalonia.Platform.Storage.StorageProviderExtensions.TryGetLocalPath(res.FirstOrDefault());
             if (string.IsNullOrEmpty(path)) return;
             if (!s.GameFolders.Contains(path, StringComparer.OrdinalIgnoreCase)) s.GameFolders.Add(path);
             s.Save(); GameLibrary.Reload();
