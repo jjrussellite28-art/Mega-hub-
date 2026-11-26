@@ -11,6 +11,7 @@ public sealed unsafe class SdlPad
     bool failed;
     DateTime nextScan;
     public string Kind = "Xbox";
+    public string Preset = "Xbox-Series";
 
     bool Init()
     {
@@ -48,7 +49,7 @@ public sealed unsafe class SdlPad
                     if (sdl.IsGameController(i) == SdlBool.True)
                     {
                         pad = sdl.GameControllerOpen(i);
-                        if (pad != null) Kind = KindOf(sdl.GameControllerNameS(pad) ?? "");
+                        if (pad != null) { var nm = sdl.GameControllerNameS(pad) ?? ""; Kind = KindOf(nm); Preset = PadIcons.FromName(nm); }
                     }
             }
             if (pad == null) return false;

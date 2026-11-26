@@ -130,3 +130,10 @@ Fixed along the way: Program.cs startup, and RollForward=LatestMajor so it runs 
 - Description text on the right
 - Data: Steam store (store.steampowered.com/api/appdetails, no key needed: description, genres, developer, publisher, release date, features) plus local Steam files (folder, size); IGDB later for non-Steam games
 - Build rule from Jake: finish and ship through CI and the Update button, no need to have his PC on while I work
+
+## Controller icon pack (build: icons slice 1)
+- Pack in src/Assets/pads/<Preset>/ (+ /Pressed) and src/Assets/app/ (settings, power, notification + Hover/Pressed), 128px, embedded as Avalonia resources.
+- PadIcons.cs: 21 presets, auto-detect from pad name, Settings > Controller > Button icons (Automatic = plugged-in pad, keyboard when none).
+- Hint bar shows the real pictures and lights the Pressed one when a key/button is used. Missing icon -> drawn badge.
+- TODO: full controller diagram screen with live pressed inputs, app icons for top bar gear/bell, make missing icons in same style, APNG animations.
+- IGDB add-on: optional, user pastes own Twitch Client ID/Secret (Settings > Add-ons). Untested on the laptop.

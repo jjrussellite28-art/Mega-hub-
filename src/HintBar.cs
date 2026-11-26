@@ -19,9 +19,14 @@ public class HintBar : Border
 
     readonly Action<Avalonia.Input.Key>? press;
 
-    public HintBar(Func<bool> padConnected, Func<string> padKind, Action<Avalonia.Input.Key>? press = null)
+    readonly Func<string>? preset;
+    string lastPreset = "";
+    string? pressedRole;
+
+    public HintBar(Func<bool> padConnected, Func<string> padKind, Action<Avalonia.Input.Key>? press = null, Func<string>? preset = null)
     {
         this.press = press;
+        this.preset = preset;
         this.padConnected = padConnected;
         this.padKind = padKind;
         HorizontalAlignment = HorizontalAlignment.Right;
@@ -32,7 +37,19 @@ public class HintBar : Border
         Background = Ui.B("#AA0B0F1A");
         Child = items;
         var t = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
-        t.Tick += (_, _) => { if (padConnected() != lastPad || padKind() != lastKind) Render(); };
+        t.Tick += (_, _) => { if (padConnected() != lastPad || padKind() != lastKind || (preset != null && preset() != lastPreset)) Render(); };
+        t.Start();
+    }
+
+    // lights up the button picture for a moment when it is pressed (keyboard or controller)
+    public void Flash(Avalonia.Input.Key k)
+    {
+        var role = k == Avalonia.Input.Key.Enter ? "A" : k == Avalonia.Input.Key.Escape ? "B" : k == Avalonia.Input.Key.Y ? "Y" : k == Avalonia.Input.Key.S ? "≡" : null;
+        if (role == null) return;
+        pressedRole = role;
+        Render();
+        var t = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(160) };
+        t.Tick += (_, _) => { t.Stop(); if (pressedRole == role) { pressedRole = null; Render(); } };
         t.Start();
     }
 
@@ -52,10 +69,13 @@ public class HintBar : Border
     {
         lastPad = padConnected();
         lastKind = padKind();
+        lastPreset = preset?.Invoke() ?? "";
         items.Children.Clear();
         foreach (var h in hints)
         {
-            // always shown as controller buttons (Xbox by default): A = select, B = back
+            // the real button picture when the pack has one for this controller
+            var pic = lastPreset == "" ? null : PadIcons.Role(lastPreset, h.pad, pressedRole == h.pad);
+            // otherwise a drawn badge (Xbox style by default): A = select, B = back
             var g = Glyph(h.pad);
             var xbox = lastKind == "Xbox" || !lastPad;
             var badge = new Border
@@ -68,8 +88,15 @@ public class HintBar : Border
             };
             var label = Ui.Text(h.what, 14, false, "#EEFFFFFF");
             label.Margin = new Thickness(8, 0, 0, 0);
+            Control badgeOrPic = badge;
+            if (pic != null)
+            {
+                var im = new Image { Source = pic, Width = 34, Height = 34, VerticalAlignment = VerticalAlignment.Center };
+                RenderOptions.SetBitmapInterpolationMode(im, Avalonia.Media.Imaging.BitmapInterpolationMode.HighQuality);
+                badgeOrPic = im;
+            }
             var item = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 18, 0), Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand) };
-            item.Children.Add(badge);
+            item.Children.Add(badgeOrPic);
             item.Children.Add(label);
             if (h.pad == "A" || h.pad == "B" || h.pad == "Y" || h.pad == "≡")
             {

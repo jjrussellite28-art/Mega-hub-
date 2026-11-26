@@ -35,6 +35,8 @@ public class AppSettings
     // false = App mode (normal window). true = Shell mode (full screen, always on top). Switch any time.
     public bool ShellMode { get; set; }
     public bool SetupDone { get; set; }
+    // "auto" = the plugged-in pad (keyboard when none), or one preset name, e.g. "PS5", "GameCube", "Keyboard"
+    public string PadIcons { get; set; } = "auto";
     public string? IgdbId { get; set; }
     public string? IgdbSecret { get; set; }
 

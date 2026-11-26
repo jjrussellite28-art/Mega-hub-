@@ -17,6 +17,7 @@ public class SettingsView : Grid, IKeyHandler
         ("Appearance", "\uE790"),
         ("Startup & Modes", "\uE7F4"),
         ("Games", "\uE7FC"),
+        ("Controller", "\uE7FC"),
         ("Add-ons & Plugins", "\uE710"),
         ("Power", "\uE7E8"),
     };
@@ -87,6 +88,15 @@ public class SettingsView : Grid, IKeyHandler
                 r.Add(new("Games found", GameLibrary.Info, null));
                 break;
             case 3:
+                {
+                    var opts = new List<string> { "auto" };
+                    opts.AddRange(PadIcons.All);
+                    var ci = Math.Max(0, opts.IndexOf(s.PadIcons ?? "auto"));
+                    r.Add(new("Button icons", PadIcons.Pretty(opts[ci]), () => { s.PadIcons = opts[(ci + 1) % opts.Count]; s.Save(); Build(); }));
+                    notes.Add(("Automatic shows the buttons of the controller you plug in (Xbox, PlayStation, GameCube, Switch and more), and the keyboard when none is connected. Pick one to always use it.", "#CCFFFFFF"));
+                }
+                break;
+            case 4:
                 r.Add(new("Add your own", "Opens the add-ons folder", () =>
                 {
                     try { Directory.CreateDirectory(Addons.Dir); Process.Start(new ProcessStartInfo("explorer.exe", "\"" + Addons.Dir + "\"") { UseShellExecute = true }); }

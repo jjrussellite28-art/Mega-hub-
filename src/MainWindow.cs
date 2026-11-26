@@ -20,8 +20,8 @@ public class MainWindow : Window
         Background = Brushes.Black;
         KeyDown += OnKeyDown;
         base.Content = root;
-        pad = new Gamepad(k => { if (IsActive && Content is IKeyHandler h) h.OnKey(k); }, () => Environment.Exit(0));
-        hints = new HintBar(() => pad.Connected, () => pad.Kind, k => { if (Content is IKeyHandler h) h.OnKey(k); });
+        pad = new Gamepad(k => { if (IsActive) { hints.Flash(k); if (Content is IKeyHandler h) h.OnKey(k); } }, () => Environment.Exit(0));
+        hints = new HintBar(() => pad.Connected, () => pad.Kind, k => { hints!.Flash(k); if (Content is IKeyHandler h) h.OnKey(k); }, () => PadIcons.Resolve(st.PadIcons, pad.Connected, pad.Preset));
         Opened += (_, _) =>
         {
             if (st.ShellMode) ApplyMode();
@@ -134,6 +134,7 @@ public class MainWindow : Window
 
     void OnKeyDown(object? sender, KeyEventArgs e)
     {
+        hints.Flash(e.Key);
         if (e.Key == Key.Q && e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Alt))
             Environment.Exit(0); // emergency exit, always works
         else if (e.Key == Key.F11)

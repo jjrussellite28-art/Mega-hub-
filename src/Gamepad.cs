@@ -24,6 +24,7 @@ public class Gamepad
 
     public bool Connected { get; private set; }
     public string Kind { get; private set; } = "Xbox";
+    public string Preset { get; private set; } = "Xbox-Series";
     readonly SdlPad sdlPad = new();
 
     public Gamepad(Action<Key> press, Action? emergencyQuit = null)
@@ -46,8 +47,8 @@ public class Gamepad
             // a PlayStation / Nintendo pad that is already in use is read first
             if (Connected && Kind != "Xbox" && sdlPad.TryRead(out var b0, out var lx0)) { Handle(new XState { Buttons = b0, LX = lx0 }); return; }
             for (int i = 0; i < 4; i++)
-                if (XInputGetState(i, out s) == 0) { Connected = true; Kind = "Xbox"; Handle(s); return; }
-            if (sdlPad.TryRead(out var b, out var lx)) { Connected = true; Kind = sdlPad.Kind; Handle(new XState { Buttons = b, LX = lx }); return; }
+                if (XInputGetState(i, out s) == 0) { Connected = true; Kind = "Xbox"; Preset = "Xbox-Series"; Handle(s); return; }
+            if (sdlPad.TryRead(out var b, out var lx)) { Connected = true; Kind = sdlPad.Kind; Preset = sdlPad.Preset; Handle(new XState { Buttons = b, LX = lx }); return; }
         }
         catch (Exception ex) { AppLog.Write("controller read: " + ex.Message); }
         // nothing found (unplugged or never plugged): forget old button/stick state so nothing sticks
