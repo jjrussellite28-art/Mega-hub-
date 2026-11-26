@@ -41,6 +41,10 @@ public class AppSettings
     public string PadIcons { get; set; } = "auto";
     // games the player starred (App ID, or the title when there is none)
     // folders the player added by hand (each game in its own sub-folder)
+    // which game stores to look in
+    public bool UseSteam { get; set; } = true;
+    public bool UseEpic { get; set; } = true;
+    public bool UseGog { get; set; } = true;
     public List<string> GameFolders { get; set; } = new();
     public List<string> Favorites { get; set; } = new();
     public string? IgdbId { get; set; }

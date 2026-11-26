@@ -16,7 +16,59 @@ public static class GameLibrary
     public static void Configure(AppSettings s) => settings = s;
     public static void Reload() => cached = null;
 
-    public static Game[] Games => cached ??= LoadSteam().Concat(LoadManual()).OrderBy(g => g.Title, StringComparer.OrdinalIgnoreCase).ToArray();
+    public static Game[] Games => cached ??= (settings == null || settings.UseSteam ? LoadSteam() : Array.Empty<Game>()).Concat(settings == null || settings.UseEpic ? LoadEpic() : Array.Empty<Game>()).Concat(settings == null || settings.UseGog ? LoadGog() : Array.Empty<Game>()).Concat(LoadManual()).OrderBy(g => g.Title, StringComparer.OrdinalIgnoreCase).ToArray();
+
+    // Epic Games Launcher keeps one small file per installed game
+    static IEnumerable<Game> LoadEpic()
+    {
+        var list = new List<Game>();
+        try
+        {
+            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Epic", "EpicGamesLauncher", "Data", "Manifests");
+            if (!Directory.Exists(dir)) return list;
+            int n = 0;
+            foreach (var f in Directory.EnumerateFiles(dir, "*.item"))
+            {
+                try
+                {
+                    using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(f));
+                    var r = doc.RootElement;
+                    string? Str(string k) => r.TryGetProperty(k, out var v) && v.ValueKind == System.Text.Json.JsonValueKind.String ? v.GetString() : null;
+                    var name = Str("DisplayName"); var loc = Str("InstallLocation"); var launch = Str("LaunchExecutable");
+                    if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(loc) || string.IsNullOrEmpty(launch)) continue;
+                    var exe = Path.Combine(loc, launch);
+                    if (!File.Exists(exe)) continue;
+                    var pal = Palette[(n++) % Palette.Length];
+                    list.Add(new Game(name, pal[0], pal[1], null, null, null, null, loc, 0, exe));
+                }
+                catch { }
+            }
+        }
+        catch (Exception e) { AppLog.Write("epic: " + e.Message); }
+        return list;
+    }
+
+    // GOG Galaxy / GOG installers register every game in the registry
+    static IEnumerable<Game> LoadGog()
+    {
+        var list = new List<Game>();
+        try
+        {
+            using var games = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\WOW6432Node\GOG.com\Games");
+            if (games == null) return list;
+            int n = 0;
+            foreach (var id in games.GetSubKeyNames())
+            {
+                using var k = games.OpenSubKey(id);
+                var name = k?.GetValue("gameName") as string; var exe = k?.GetValue("exe") as string; var path = k?.GetValue("path") as string;
+                if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(exe) || !File.Exists(exe)) continue;
+                var pal = Palette[(n++) % Palette.Length];
+                list.Add(new Game(name, pal[0], pal[1], null, null, null, null, path, 0, exe));
+            }
+        }
+        catch (Exception e) { AppLog.Write("gog: " + e.Message); }
+        return list;
+    }
 
     static readonly string[] SkipExe = { "unins", "crash", "setup", "redist", "vc_", "dxsetup", "dotnet", "installer", "launcher_helper", "uninstall", "updater" };
 

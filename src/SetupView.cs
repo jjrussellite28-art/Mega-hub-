@@ -10,7 +10,7 @@ namespace MegaHubPlus;
 public class SetupView : Grid, IKeyHandler
 {
     record Card(string Title, string Sub, string[] Bullets, string? Note, bool Current, string Icon, double Ratio = 0);
-    record Step(string Title, string Line, string Later, List<Card> Cards, Action<int> Apply, bool Small = false);
+    record Step(string Title, string Line, string Later, List<Card> Cards, Action<int> Apply, bool Small = false, bool Multi = false);
 
     readonly AppSettings s;
     readonly Action applyMode;
@@ -50,6 +50,16 @@ public class SetupView : Grid, IKeyHandler
                 new("Shell", "As a console", new[] { "Replaces the desktop, starts at sign-in", "Back to Windows any time (Ctrl+Alt+Q)" }, "Takes effect the next time you sign in.", s.ShellMode, ""),
             },
             i => { wantShell = i == 1; }));
+
+        steps.Add(new("Where are your games?", "Tick the stores to look in. Press A on a card to switch it.", "Settings › Games",
+            new()
+            {
+                new("Steam", "Installed Steam games", Array.Empty<string>(), null, s.UseSteam, ""),
+                new("Epic Games", "Installed Epic games", Array.Empty<string>(), null, s.UseEpic, ""),
+                new("GOG", "Installed GOG games", Array.Empty<string>(), null, s.UseGog, ""),
+                new("Continue", "Add your own folders later in Settings › Games", Array.Empty<string>(), null, false, ""),
+            },
+            _ => { }, true, true));
 
         steps.Add(new("Want better game pictures?", "Wide wallpapers and descriptions for your games, free.", "Settings › Add-ons & Plugins",
             new()
@@ -180,6 +190,13 @@ public class SetupView : Grid, IKeyHandler
 
     void Choose()
     {
+        if (steps[step].Multi)
+        {
+            var cards = steps[step].Cards;
+            if (sel < cards.Count - 1) { cards[sel] = cards[sel] with { Current = !cards[sel].Current }; Render(); return; }
+            s.UseSteam = cards[0].Current; s.UseEpic = cards[1].Current; s.UseGog = cards[2].Current;
+            GameLibrary.Reload();
+        }
         steps[step].Apply(sel);
         s.Save();
         if (step < steps.Count - 1) { step++; sel = CurrentIndex(steps[step]); Render(); }

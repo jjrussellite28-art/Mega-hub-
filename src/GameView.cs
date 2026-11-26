@@ -157,7 +157,7 @@ public class GameView : Grid, IKeyHandler
             Line("Last played", last == null ? "Not played" : days == 0 ? "Played today" : days == 1 ? "Yesterday" : last.Value.ToString("MMM d, yyyy"));
             Line("Time played", mins <= 0 ? "Not played" : mins < 60 ? mins + " min" : (mins / 60) + " h " + (mins % 60) + " min");
         }
-        Line("Source", g.AppId != null ? "Steam" : g.Exe != null ? "Added by you" : null);
+        Line("Source", g.AppId != null ? "Steam" : g.Exe != null ? (g.Folder != null && g.Folder.Contains("Epic", StringComparison.OrdinalIgnoreCase) ? "Epic Games" : "Added by you") : null);
         Line("Developer", st?.Dev);
         Line("Publisher", st?.Pub);
         Line("Released", st?.Date);

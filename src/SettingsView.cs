@@ -147,6 +147,9 @@ public class SettingsView : Grid, IKeyHandler
                 break;
             case 2:
                 r.Add(new("Games found", GameLibrary.Info, null));
+                r.Add(new("Steam", s.UseSteam ? "On" : "Off", () => { s.UseSteam = !s.UseSteam; s.Save(); GameLibrary.Reload(); Build(); }));
+                r.Add(new("Epic Games", s.UseEpic ? "On" : "Off", () => { s.UseEpic = !s.UseEpic; s.Save(); GameLibrary.Reload(); Build(); }));
+                r.Add(new("GOG", s.UseGog ? "On" : "Off", () => { s.UseGog = !s.UseGog; s.Save(); GameLibrary.Reload(); Build(); }));
                 r.Add(new("Add a game folder", "Pick a folder with your games in it", () => { browsing = true; browsePath = null; browseIdx = 0; Build(); }));
                 foreach (var gf in s.GameFolders.ToList())
                 {
