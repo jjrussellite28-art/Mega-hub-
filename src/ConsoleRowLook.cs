@@ -359,13 +359,13 @@ public class ConsoleRowLook : LookBase
         var art = GameLibrary.ArtBrush(path);
         hero.Background = art ?? Ui.Grad(g.C1, "#0B0F1A", false);
         hero.Effect = new BlurEffect { Radius = 30 };
-        if (g.HeroPath != null && art is ImageBrush full && full.Source != null)
+        if (path != null && art is ImageBrush full && full.Source != null)
             hero.Background = new ImageBrush(full.Source)
             {
                 Stretch = Stretch.Fill,
                 SourceRect = new RelativeRect(0, 0.90, 1, 0.10, RelativeUnit.Relative),
             };
-        if (g.HeroPath != null && GameLibrary.ArtBrush(g.HeroPath, Stretch.Fill) is ImageBrush ib && ib.Source is Avalonia.Media.Imaging.Bitmap bm && Bounds.Width > 0)
+        if (path != null && GameLibrary.ArtBrush(path, Stretch.Fill) is ImageBrush ib && ib.Source is Avalonia.Media.Imaging.Bitmap bm && Bounds.Width > 0)
         {
             heroSharp.Background = ib;
             heroSharp.Height = Bounds.Width * bm.Size.Height / bm.Size.Width;
