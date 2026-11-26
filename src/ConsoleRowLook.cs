@@ -79,7 +79,7 @@ public class ConsoleRowLook : LookBase
         clock.FontSize = 26;
         clock.Margin = new Thickness(10, 0, 14, 0);
         right.Children.Add(clock);
-        Control gear = S.PictureIcons ? PicIcon("settings") : Glyph("\uE713", 26);
+        Control gear = S.PictureIcons ? PicIcon("settings") : Glyph("\uE713", 34);
         right.Children.Add(IconButton(gear, () => OpenSettings?.Invoke()));
         Grid.SetColumn(right, 2);
         bar.Children.Add(right);
@@ -128,8 +128,8 @@ public class ConsoleRowLook : LookBase
             catch { return null; }
         }
         var normal = Load(""); var hover = Load("Hover/") ?? normal; var down = Load("Pressed/") ?? normal;
-        if (normal == null) return name == "settings" ? Glyph("\uE713", 26) : BellIcon();
-        var im = new Image { Source = normal, Width = 40, Height = 40 };
+        if (normal == null) return name == "settings" ? Glyph("\uE713", 34) : BellIcon();
+        var im = new Image { Source = normal, Width = 56, Height = 56 };
         RenderOptions.SetBitmapInterpolationMode(im, Avalonia.Media.Imaging.BitmapInterpolationMode.HighQuality);
         im.PointerEntered += (_, _) => im.Source = hover;
         im.PointerExited += (_, _) => im.Source = normal;
@@ -138,7 +138,7 @@ public class ConsoleRowLook : LookBase
         return im;
     }
 
-    static Control BellIcon() => Glyph("\uEA8F", 26);
+    static Control BellIcon() => Glyph("\uEA8F", 34);
 
     // round icon button: glows blue when the mouse is over it
     static Border IconButton(Control icon, Action click)

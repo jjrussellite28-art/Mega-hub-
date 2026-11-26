@@ -53,7 +53,16 @@ public static class Ui
         var (w, h) = Size(shape, g);
         if (selected) { w *= 1.1; h *= 1.1; }
         // Fit: the whole cover always shows, nothing is cut off
-        var art = shape == TileShape.Wide ? GameLibrary.ArtBrush(g.HeroPath ?? g.CoverPath, Stretch.Uniform) : GameLibrary.ArtBrush(g.CoverPath, Stretch.Uniform);
+        // the picture fills the whole outline: stretched a tiny bit when the shapes are close, otherwise cropped evenly
+        var artPath = shape == TileShape.Wide ? (g.HeroPath ?? g.CoverPath) : g.CoverPath;
+        var stretch = Stretch.UniformToFill;
+        var bmp = GameLibrary.LoadBitmap(artPath);
+        if (bmp != null && bmp.Size.Height > 0 && h > 0)
+        {
+            var ratio = (bmp.Size.Width / bmp.Size.Height) / (w / h);
+            if (ratio > 0.85 && ratio < 1.18) stretch = Stretch.Fill;
+        }
+        var art = GameLibrary.ArtBrush(artPath, stretch);
         if (art is ImageBrush ib) ib.AlignmentY = AlignmentY.Center;
         var tile = new Border
         {
