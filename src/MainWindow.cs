@@ -36,7 +36,7 @@ public class MainWindow : Window
                 done.Start();
             }
         };
-        GameLibrary.Configure(st); Igdb.Init(st);
+        GameLibrary.Configure(st); Igdb.Init(st); Sgdb.Init(st); _ = Sgdb.PrefetchAsync(GameLibrary.Games);
         _ = Igdb.PrefetchAsync(GameLibrary.Games);
         ApplyMode();
         if (Startup.SafeMode) ShowSafe();

@@ -308,8 +308,10 @@ public class ConsoleRowLook : LookBase
         {
             // stretched to exactly the screen: nothing cut off, no borders, works at any size
             // the game's poster itself, stretched over the whole screen so every character on it shows
+            var hero1 = Sgdb.ArtPath(g);
             var wide = Igdb.ArtPath(g);
-            if (wide != null) hero.Background = GameLibrary.ArtBrush(wide, Stretch.UniformToFill) ?? Ui.Grad(g.C1, "#0B0F1A", false);
+            if (hero1 != null) ShowWhole(g, hero1);
+            else if (wide != null) hero.Background = GameLibrary.ArtBrush(wide, Stretch.UniformToFill) ?? Ui.Grad(g.C1, "#0B0F1A", false);
             else
             {
                 // no wide picture available: a soft blurred backdrop made from the cover, never a stretched poster
@@ -325,21 +327,7 @@ public class ConsoleRowLook : LookBase
         }
         else
         {
-            // whole picture at its own shape, softened bottom edge fills the rest
-            var art = GameLibrary.ArtBrush(path);
-            hero.Background = art ?? Ui.Grad(g.C1, "#0B0F1A", false);
-            hero.Effect = new BlurEffect { Radius = 30 };
-            if (g.HeroPath != null && art is ImageBrush full && full.Source != null)
-                hero.Background = new ImageBrush(full.Source)
-                {
-                    Stretch = Stretch.Fill,
-                    SourceRect = new RelativeRect(0, 0.90, 1, 0.10, RelativeUnit.Relative),
-                };
-            if (g.HeroPath != null && GameLibrary.ArtBrush(g.HeroPath, Stretch.Fill) is ImageBrush ib && ib.Source is Avalonia.Media.Imaging.Bitmap bm && Bounds.Width > 0)
-            {
-                heroSharp.Background = ib;
-                heroSharp.Height = Bounds.Width * bm.Size.Height / bm.Size.Width;
-            }
+            ShowWhole(g, path);
         }
         // the game's own title logo (like on Steam) when it has one, otherwise its name
         var lg = GameLibrary.LoadBitmap(g.LogoPath);
@@ -361,6 +349,26 @@ public class ConsoleRowLook : LookBase
                 line.Children.Add(tile);
             }
             gridHost.Children.Add(line);
+        }
+    }
+
+    // whole picture at its own shape, softened bottom edge fills the rest
+    void ShowWhole(Game g, string? path)
+    {
+        // whole picture at its own shape, softened bottom edge fills the rest
+        var art = GameLibrary.ArtBrush(path);
+        hero.Background = art ?? Ui.Grad(g.C1, "#0B0F1A", false);
+        hero.Effect = new BlurEffect { Radius = 30 };
+        if (g.HeroPath != null && art is ImageBrush full && full.Source != null)
+            hero.Background = new ImageBrush(full.Source)
+            {
+                Stretch = Stretch.Fill,
+                SourceRect = new RelativeRect(0, 0.90, 1, 0.10, RelativeUnit.Relative),
+            };
+        if (g.HeroPath != null && GameLibrary.ArtBrush(g.HeroPath, Stretch.Fill) is ImageBrush ib && ib.Source is Avalonia.Media.Imaging.Bitmap bm && Bounds.Width > 0)
+        {
+            heroSharp.Background = ib;
+            heroSharp.Height = Bounds.Width * bm.Size.Height / bm.Size.Width;
         }
     }
 

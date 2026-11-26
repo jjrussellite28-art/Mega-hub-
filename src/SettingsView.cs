@@ -173,10 +173,13 @@ public class SettingsView : Grid, IKeyHandler
                     try { Directory.CreateDirectory(Addons.Dir); Process.Start(new ProcessStartInfo("explorer.exe", "\"" + Addons.Dir + "\"") { UseShellExecute = true }); }
                     catch (Exception ex) { status.Text = "Could not open the folder: " + ex.Message; Build(); }
                 }));
+                r.Add(new("SteamGridDB key", string.IsNullOrWhiteSpace(s.SgdbKey) ? "Not set" : "Set", () => { editing = "sgdb"; Build(); }));
+                r.Add(new("Test SteamGridDB", "", () => { status.Text = "Testing..."; Build(); _ = TestSgdb(); }));
                 r.Add(new("IGDB Client ID", string.IsNullOrWhiteSpace(s.IgdbId) ? "Not set" : "Set", () => { editing = "id"; Build(); }));
                 r.Add(new("IGDB Secret", string.IsNullOrWhiteSpace(s.IgdbSecret) ? "Not set" : "Set", () => { editing = "secret"; Build(); }));
                 r.Add(new("Test IGDB connection", "", () => { status.Text = "Testing..."; Build(); _ = TestIgdb(); }));
                 foreach (var a in Addons.Scan()) r.Add(new(a.Name, a.Info, null));
+                notes.Add(("SteamGridDB (optional) gives your games sharp wide wallpapers. Make a free account at steamgriddb.com, open Preferences, then API, and paste the key here. Pictures download by themselves.", "#CCFFFFFF"));
                 notes.Add(("IGDB (optional) gives your games wide wallpapers and descriptions. Get a free Client ID and Secret at dev.twitch.tv (log in, Register Your Application, category Application Integration), then paste them here.", "#CCFFFFFF"));
                 notes.Add(("Add-ons: only ones signed by the owner will load. Plugins (Weather, News and more) will be listed here too.", "#CCFFFFFF"));
                 break;
@@ -296,10 +299,11 @@ public class SettingsView : Grid, IKeyHandler
         if (editing != null)
         {
             var isSecret = editing == "secret";
-            var box = new TextBox { Text = isSecret ? s.IgdbSecret : s.IgdbId, Watermark = isSecret ? "Paste the Client Secret, then press Enter" : "Paste the Client ID, then press Enter", FontSize = 17, Margin = new Thickness(0, 12, 0, 0), MaxWidth = 640, HorizontalAlignment = HorizontalAlignment.Left };
+            var isSgdb = editing == "sgdb";
+            var box = new TextBox { Text = isSgdb ? s.SgdbKey : isSecret ? s.IgdbSecret : s.IgdbId, Watermark = isSgdb ? "Paste the SteamGridDB key, then press Enter" : isSecret ? "Paste the Client Secret, then press Enter" : "Paste the Client ID, then press Enter", FontSize = 17, Margin = new Thickness(0, 12, 0, 0), MaxWidth = 640, HorizontalAlignment = HorizontalAlignment.Left };
             box.KeyDown += (_, e) =>
             {
-                if (e.Key == Key.Enter) { if (isSecret) s.IgdbSecret = box.Text?.Trim(); else s.IgdbId = box.Text?.Trim(); s.Save(); editing = null; e.Handled = true; Build(); }
+                if (e.Key == Key.Enter) { if (isSgdb) { s.SgdbKey = box.Text?.Trim(); _ = Sgdb.PrefetchAsync(GameLibrary.Games); } else if (isSecret) s.IgdbSecret = box.Text?.Trim(); else s.IgdbId = box.Text?.Trim(); s.Save(); editing = null; e.Handled = true; Build(); }
                 else if (e.Key == Key.Escape) { editing = null; e.Handled = true; Build(); }
             };
             right.Children.Add(box);
@@ -389,6 +393,12 @@ public class SettingsView : Grid, IKeyHandler
             Grid.SetRowSpan(shade, 2);
             Children.Add(shade);
         }
+    }
+
+    async System.Threading.Tasks.Task TestSgdb()
+    {
+        status.Text = await Sgdb.Test();
+        Build();
     }
 
     async System.Threading.Tasks.Task AddFolder()
