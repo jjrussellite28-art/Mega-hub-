@@ -41,6 +41,13 @@ public class SettingsView : Grid, IKeyHandler
     readonly TextBlock status = Ui.Text("", 14, false, "#F5C542");
     bool confirmUninstall;
     bool confirmShell;
+    // a pop-up list of choices (like Mode in CouchHUD): up/down, A to pick, B to close
+    (string title, string[] names, int cur, Action<int> set)? picker;
+    int pickIdx;
+
+    Row Pick(string label, string[] names, int cur, Action<int> set) =>
+        new(label, names[Math.Clamp(cur, 0, names.Length - 1)], () => { picker = (label, names, cur, set); pickIdx = Math.Clamp(cur, 0, names.Length - 1); Build(); });
+
     string? editing;   // "id" or "secret" while typing a code
     int cat, ri;
     bool inRight;
@@ -64,10 +71,10 @@ public class SettingsView : Grid, IKeyHandler
         {
             case 0:
                 var wi = Array.FindIndex(Walls, w => w.v == s.Wall);
-                r.Add(new("Wallpaper", Walls[Math.Max(wi, 0)].name, () => { s.Wall = Walls[(Math.Max(wi, 0) + 1) % Walls.Length].v; s.Save(); Build(); }));
+                r.Add(Pick("Wallpaper", Walls.Select(w => w.name).ToArray(), Math.Max(wi, 0), i => { s.Wall = Walls[i].v; s.Save(); }));
                 var si = Array.FindIndex(Shapes, w => w.v == s.Shape);
-                r.Add(new("Tile shape", Shapes[Math.Max(si, 0)].name, () => { s.Shape = Shapes[(Math.Max(si, 0) + 1) % Shapes.Length].v; s.Save(); Build(); }));
-                r.Add(new("Top bar icons", s.PictureIcons ? "Glossy pictures" : "Original", () => { s.PictureIcons = !s.PictureIcons; s.Save(); Build(); }));
+                r.Add(Pick("Tile shape", Shapes.Select(w => w.name).ToArray(), Math.Max(si, 0), i => { s.Shape = Shapes[i].v; s.Save(); }));
+                r.Add(Pick("Top bar icons", new[] { "Original", "Glossy pictures" }, s.PictureIcons ? 1 : 0, i => { s.PictureIcons = i == 1; s.Save(); }));
                 notes.Add(("Glossy pictures show on the home screen's bell and settings buttons the next time you open it.", "#CCFFFFFF"));
                 break;
             case 1:
@@ -95,7 +102,7 @@ public class SettingsView : Grid, IKeyHandler
                     var opts = new List<string> { "auto" };
                     opts.AddRange(PadIcons.All);
                     var ci = Math.Max(0, opts.IndexOf(s.PadIcons ?? "auto"));
-                    r.Add(new("Button icons", PadIcons.Pretty(opts[ci]), () => { s.PadIcons = opts[(ci + 1) % opts.Count]; s.Save(); Build(); }));
+                    r.Add(Pick("Button icons", opts.Select(PadIcons.Pretty).ToArray(), ci, i => { s.PadIcons = opts[i]; s.Save(); }));
                     notes.Add(("Automatic shows the buttons of the controller you plug in (Xbox, PlayStation, GameCube, Switch and more), and the keyboard when none is connected. Pick one to always use it.", "#CCFFFFFF"));
                 }
                 break;
@@ -244,6 +251,53 @@ public class SettingsView : Grid, IKeyHandler
         Grid.SetColumn(scroll, 1);
         Grid.SetRow(scroll, 1);
         body.Children.Add(scroll);
+
+        if (picker != null)
+        {
+            var (ptitle, names, cur, set) = picker.Value;
+            var list = new StackPanel { Width = 420 };
+            list.Children.Add(Ui.Text(ptitle, 22, true));
+            ((TextBlock)list.Children[0]).Margin = new Thickness(0, 0, 0, 12);
+            var items = new StackPanel();
+            for (int i = 0; i < names.Length; i++)
+            {
+                int idx = i;
+                bool on = i == pickIdx;
+                var line = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+                line.Children.Add(Ui.Text(names[i], 17, on, on ? "#FFFFFF" : "#DDFFFFFF"));
+                if (i == cur) { var tick = Ui.Text("\u2713", 18, true, "#7FE3FF"); Grid.SetColumn(tick, 1); line.Children.Add(tick); }
+                var it = new Border
+                {
+                    Padding = new Thickness(18, 12), Margin = new Thickness(0, 0, 0, 4), CornerRadius = new CornerRadius(10),
+                    Background = Ui.B(on ? "#55408CFF" : "#22FFFFFF"), BorderBrush = Ui.B(on ? "#4C8DFF" : "#00000000"), BorderThickness = new Thickness(2),
+                    Child = line,
+                };
+                it.PointerPressed += (_, e) => { Choose(idx); e.Handled = true; };
+                items.Children.Add(it);
+            }
+            list.Children.Add(new ScrollViewer { Content = items, MaxHeight = 460, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto });
+            var panel = new Border
+            {
+                Background = Ui.B("#F0101A33"), BorderBrush = Ui.B("#664C8DFF"), BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(20), Padding = new Thickness(26), Child = list,
+                HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+                BoxShadow = BoxShadows.Parse("0 10 40 0 #99000000"),
+            };
+            var shade = new Grid { Background = Ui.B("#AA000000") };
+            shade.Children.Add(panel);
+            shade.PointerPressed += (_, _) => { picker = null; Build(); };
+            Grid.SetRowSpan(shade, 2);
+            Children.Add(shade);
+        }
+    }
+
+    void Choose(int i)
+    {
+        if (picker == null) return;
+        var set = picker.Value.set;
+        picker = null;
+        set(i);
+        Build();
     }
 
     bool updating;
@@ -401,6 +455,17 @@ public class SettingsView : Grid, IKeyHandler
     public void OnKey(Key key)
     {
         if (editing != null) return;
+        if (picker != null)
+        {
+            var n = picker.Value.names.Length;
+            if (key == Key.Up && pickIdx > 0) pickIdx--;
+            else if (key == Key.Down && pickIdx < n - 1) pickIdx++;
+            else if (key == Key.Enter || key == Key.Space) { Choose(pickIdx); return; }
+            else if (key == Key.Escape) picker = null;
+            else return;
+            Build();
+            return;
+        }
         if (key == Key.Escape)
         {
             if (confirmShell) { confirmShell = false; Build(); }
