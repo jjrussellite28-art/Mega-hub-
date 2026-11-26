@@ -18,11 +18,13 @@ public class SetupView : Grid, IKeyHandler
     readonly HintBar hints;
     readonly List<Step> steps = new();
     int step, sel;
-    bool wantShell;
+    bool wantShell, wantPictures;
+    readonly Action? openAddons;
     const string Icons = "Segoe Fluent Icons, Segoe MDL2 Assets";
 
-    public SetupView(AppSettings s, Action applyMode, Action done, HintBar hints)
+    public SetupView(AppSettings s, Action applyMode, Action done, HintBar hints, Action? openAddons = null)
     {
+        this.openAddons = openAddons;
         this.s = s; this.applyMode = applyMode; this.done = done; this.hints = hints;
         wantShell = s.ShellMode;
         Background = Ui.Grad("#0A1430", "#0B2F70");
@@ -48,6 +50,14 @@ public class SetupView : Grid, IKeyHandler
                 new("Shell", "As a console", new[] { "Replaces the desktop, starts at sign-in", "Back to Windows any time (Ctrl+Alt+Q)" }, "Takes effect the next time you sign in.", s.ShellMode, ""),
             },
             i => { wantShell = i == 1; }));
+
+        steps.Add(new("Want better game pictures?", "Wide wallpapers and descriptions for your games, free.", "Settings › Add-ons & Plugins",
+            new()
+            {
+                new("Not now", "Steam pictures only", new[] { "Works right away", "Nothing to sign up for" }, null, true, ""),
+                new("Set up IGDB", "Wide wallpapers + info", new[] { "Free key from dev.twitch.tv", "You paste it once, pictures download by themselves", "Saved only on this PC" }, "Opens the add-ons page when setup ends.", false, ""),
+            },
+            i => { wantPictures = i == 1; }));
 
         step = 0;
         Render();
@@ -188,7 +198,7 @@ public class SetupView : Grid, IKeyHandler
         s.SetupDone = true;
         s.Save();
         applyMode();
-        done();
+        if (wantPictures && openAddons != null) openAddons(); else done();
     }
 
     void Exit() { s.SetupDone = true; s.Save(); done(); }

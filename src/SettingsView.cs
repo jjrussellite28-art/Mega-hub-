@@ -46,9 +46,10 @@ public class SettingsView : Grid, IKeyHandler
     bool inRight;
     List<Row> rows = new();
 
-    public SettingsView(AppSettings s, Action back, Action applyMode, Action? runSetup = null)
+    public SettingsView(AppSettings s, Action back, Action applyMode, Action? runSetup = null, int startCat = 0)
     {
         this.runSetup = runSetup;
+        cat = startCat;
         this.s = s;
         this.back = back;
         this.applyMode = applyMode;

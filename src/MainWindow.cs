@@ -97,7 +97,7 @@ public class MainWindow : Window
 
     void ShowSetup()
     {
-        Content = new SetupView(st, ApplyMode, ShowLook, hints);
+        Content = new SetupView(st, ApplyMode, ShowLook, hints, () => { Content = new SettingsView(st, ShowLook, ApplyMode, ShowSetup, 4); hints.Set(("A", "Enter", "Select"), ("B", "Esc", "Back")); });
     }
 
     void ShowSettings()

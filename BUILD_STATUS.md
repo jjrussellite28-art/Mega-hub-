@@ -137,3 +137,4 @@ Fixed along the way: Program.cs startup, and RollForward=LatestMajor so it runs 
 - Hint bar shows the real pictures and lights the Pressed one when a key/button is used. Missing icon -> drawn badge.
 - TODO: full controller diagram screen with live pressed inputs, app icons for top bar gear/bell, make missing icons in same style, APNG animations.
 - IGDB add-on: optional, user pastes own Twitch Client ID/Secret (Settings > Add-ons). Untested on the laptop.
+- Setup now has a "Want better game pictures?" step (Not now / Set up IGDB -> opens Settings > Add-ons). SteamGridDB still to build (paste-your-own-key, same way as IGDB).
