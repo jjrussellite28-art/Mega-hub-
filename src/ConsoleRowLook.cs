@@ -74,12 +74,12 @@ public class ConsoleRowLook : LookBase
 
         // right side: notification bell, clock, settings gear
         var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        right.Children.Add(IconButton(BellIcon(), ShowNotifications));
+        right.Children.Add(IconButton(S.PictureIcons ? PicIcon("notification") : BellIcon(), ShowNotifications));
         var clock = Ui.Clock();
         clock.FontSize = 26;
         clock.Margin = new Thickness(10, 0, 14, 0);
         right.Children.Add(clock);
-        var gear = Glyph("\uE713", 26);
+        Control gear = S.PictureIcons ? PicIcon("settings") : Glyph("\uE713", 26);
         right.Children.Add(IconButton(gear, () => OpenSettings?.Invoke()));
         Grid.SetColumn(right, 2);
         bar.Children.Add(right);
@@ -114,6 +114,29 @@ public class ConsoleRowLook : LookBase
         FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
         HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
     };
+
+    // glossy picture icon that changes when the mouse is over it or presses it
+    static Control PicIcon(string name)
+    {
+        Avalonia.Media.Imaging.Bitmap? Load(string folder)
+        {
+            try
+            {
+                var u = new Uri("avares://MegaHubPlus/Assets/app/" + folder + name + ".png");
+                return Avalonia.Platform.AssetLoader.Exists(u) ? new Avalonia.Media.Imaging.Bitmap(Avalonia.Platform.AssetLoader.Open(u)) : null;
+            }
+            catch { return null; }
+        }
+        var normal = Load(""); var hover = Load("Hover/") ?? normal; var down = Load("Pressed/") ?? normal;
+        if (normal == null) return name == "settings" ? Glyph("\uE713", 26) : BellIcon();
+        var im = new Image { Source = normal, Width = 40, Height = 40 };
+        RenderOptions.SetBitmapInterpolationMode(im, Avalonia.Media.Imaging.BitmapInterpolationMode.HighQuality);
+        im.PointerEntered += (_, _) => im.Source = hover;
+        im.PointerExited += (_, _) => im.Source = normal;
+        im.PointerPressed += (_, _) => im.Source = down;
+        im.PointerReleased += (_, _) => im.Source = hover;
+        return im;
+    }
 
     static Control BellIcon() => Glyph("\uEA8F", 26);
 

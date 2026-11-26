@@ -36,6 +36,8 @@ public class AppSettings
     public bool ShellMode { get; set; }
     public bool SetupDone { get; set; }
     // "auto" = the plugged-in pad (keyboard when none), or one preset name, e.g. "PS5", "GameCube", "Keyboard"
+    // false = the original round icons, true = the glossy picture icons for the bell and settings
+    public bool PictureIcons { get; set; }
     public string PadIcons { get; set; } = "auto";
     public string? IgdbId { get; set; }
     public string? IgdbSecret { get; set; }

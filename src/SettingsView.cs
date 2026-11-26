@@ -66,6 +66,8 @@ public class SettingsView : Grid, IKeyHandler
                 r.Add(new("Wallpaper", Walls[Math.Max(wi, 0)].name, () => { s.Wall = Walls[(Math.Max(wi, 0) + 1) % Walls.Length].v; s.Save(); Build(); }));
                 var si = Array.FindIndex(Shapes, w => w.v == s.Shape);
                 r.Add(new("Tile shape", Shapes[Math.Max(si, 0)].name, () => { s.Shape = Shapes[(Math.Max(si, 0) + 1) % Shapes.Length].v; s.Save(); Build(); }));
+                r.Add(new("Top bar icons", s.PictureIcons ? "Glossy pictures" : "Original", () => { s.PictureIcons = !s.PictureIcons; s.Save(); Build(); }));
+                notes.Add(("Glossy pictures show on the home screen's bell and settings buttons the next time you open it.", "#CCFFFFFF"));
                 break;
             case 1:
                 if (confirmShell)
