@@ -47,6 +47,8 @@ public class AppSettings
     public bool UseGog { get; set; } = true;
     public List<string> GameFolders { get; set; } = new();
     public List<string> Favorites { get; set; } = new();
+    public string? WeatherCity { get; set; }
+    public string? NewsFeed { get; set; }
     public string? SgdbKey { get; set; }
     public string? IgdbId { get; set; }
     public string? IgdbSecret { get; set; }

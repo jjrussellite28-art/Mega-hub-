@@ -53,7 +53,8 @@ public static class PadIcons
         ["A"] = new[] { "a", "cross", "enter", "one-start" },
         ["B"] = new[] { "b", "circle", "escape", "two" },
         ["Y"] = new[] { "y", "triangle" },
-        ["≡"] = new[] { "settings" },
+        ["≡"] = new[] { "settings", "start" },
+        ["BACK"] = new[] { "back" },
         ["X"] = new[] { "x", "square" },
         ["LT"] = new[] { "lt", "l2", "zl" },
         ["RT"] = new[] { "rt", "r2", "zr" },
@@ -61,8 +62,8 @@ public static class PadIcons
         ["DOWN"] = new[] { "dpad-down", "down" },
         ["LEFT"] = new[] { "dpad-left", "left" },
         ["RIGHT"] = new[] { "dpad-right", "right" },
-        ["LS"] = new[] { "left-stick" },
-        ["RS"] = new[] { "right-stick", "c-stick" },
+        ["LS"] = new[] { "left-stick", "ls" },
+        ["RS"] = new[] { "right-stick", "c-stick", "rs" },
         ["LB"] = new[] { "lb", "l1", "l", "zl" },
         ["RB"] = new[] { "rb", "r1", "r", "zr" },
     };
@@ -76,6 +77,21 @@ public static class PadIcons
         foreach (var f in files)
         {
             var key = preset + "/" + (pressed ? "Pressed/" : "") + f;
+            if (cache.TryGetValue(key, out var bm)) { if (bm != null) return bm; continue; }
+            bm = null;
+            try
+            {
+                var uri = new Uri("avares://MegaHubPlus/Assets/pads/" + key + ".png");
+                if (AssetLoader.Exists(uri)) bm = new Bitmap(AssetLoader.Open(uri));
+            }
+            catch { }
+            cache[key] = bm;
+            if (bm != null) return bm;
+        }
+        // not in this controller's set: the plain glossy one made for gaps (Back, Start, stick clicks)
+        foreach (var f in files)
+        {
+            var key = "_generic/" + (pressed ? "Pressed/" : "") + f;
             if (cache.TryGetValue(key, out var bm)) { if (bm != null) return bm; continue; }
             bm = null;
             try

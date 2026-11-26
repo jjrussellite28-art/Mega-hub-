@@ -176,6 +176,8 @@ public class SettingsView : Grid, IKeyHandler
                     try { Directory.CreateDirectory(Addons.Dir); Process.Start(new ProcessStartInfo("explorer.exe", "\"" + Addons.Dir + "\"") { UseShellExecute = true }); }
                     catch (Exception ex) { status.Text = "Could not open the folder: " + ex.Message; Build(); }
                 }));
+                r.Add(new("Weather city", string.IsNullOrWhiteSpace(s.WeatherCity) ? "Not set" : s.WeatherCity!, () => { editing = "city"; Build(); }));
+                r.Add(new("News feed (RSS link)", string.IsNullOrWhiteSpace(s.NewsFeed) ? "BBC News" : "Custom", () => { editing = "feed"; Build(); }));
                 r.Add(new("SteamGridDB key", string.IsNullOrWhiteSpace(s.SgdbKey) ? "Not set" : "Set", () => { editing = "sgdb"; Build(); }));
                 r.Add(new("Test SteamGridDB", "", () => { status.Text = "Testing..."; Build(); _ = TestSgdb(); }));
                 r.Add(new("IGDB Client ID", string.IsNullOrWhiteSpace(s.IgdbId) ? "Not set" : "Set", () => { editing = "id"; Build(); }));
@@ -303,10 +305,12 @@ public class SettingsView : Grid, IKeyHandler
         {
             var isSecret = editing == "secret";
             var isSgdb = editing == "sgdb";
-            var box = new TextBox { Text = isSgdb ? s.SgdbKey : isSecret ? s.IgdbSecret : s.IgdbId, Watermark = isSgdb ? "Paste the SteamGridDB key, then press Enter" : isSecret ? "Paste the Client Secret, then press Enter" : "Paste the Client ID, then press Enter", FontSize = 17, Margin = new Thickness(0, 12, 0, 0), MaxWidth = 640, HorizontalAlignment = HorizontalAlignment.Left };
+            var isCity = editing == "city";
+            var isFeed = editing == "feed";
+            var box = new TextBox { Text = isCity ? s.WeatherCity : isFeed ? s.NewsFeed : isSgdb ? s.SgdbKey : isSecret ? s.IgdbSecret : s.IgdbId, Watermark = isCity ? "Type your city (like Buffalo), then press Enter" : isFeed ? "Paste an RSS link (empty = BBC News), then press Enter" : isSgdb ? "Paste the SteamGridDB key, then press Enter" : isSecret ? "Paste the Client Secret, then press Enter" : "Paste the Client ID, then press Enter", FontSize = 17, Margin = new Thickness(0, 12, 0, 0), MaxWidth = 640, HorizontalAlignment = HorizontalAlignment.Left };
             box.KeyDown += (_, e) =>
             {
-                if (e.Key == Key.Enter) { if (isSgdb) { s.SgdbKey = box.Text?.Trim(); _ = Sgdb.PrefetchAsync(GameLibrary.Games); } else if (isSecret) s.IgdbSecret = box.Text?.Trim(); else s.IgdbId = box.Text?.Trim(); s.Save(); editing = null; e.Handled = true; Build(); }
+                if (e.Key == Key.Enter) { if (isCity) { s.WeatherCity = box.Text?.Trim(); _ = Weather.RefreshAsync(s, true); } else if (isFeed) { s.NewsFeed = box.Text?.Trim(); _ = News.RefreshAsync(s, true); } else if (isSgdb) { s.SgdbKey = box.Text?.Trim(); _ = Sgdb.PrefetchAsync(GameLibrary.Games); } else if (isSecret) s.IgdbSecret = box.Text?.Trim(); else s.IgdbId = box.Text?.Trim(); s.Save(); editing = null; e.Handled = true; Build(); }
                 else if (e.Key == Key.Escape) { editing = null; e.Handled = true; Build(); }
             };
             right.Children.Add(box);

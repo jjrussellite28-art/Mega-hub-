@@ -16,7 +16,7 @@ public class ConsoleRowLook : LookBase
     readonly Border hero = new();       // blurred copy fills the whole screen
     readonly Border heroSharp = new();  // the whole picture, nothing cut off
     int top;                       // first visible row of the poster grid
-    static readonly string[] TabNames = { "Games", "Media", "Store", "Friends" };
+    static readonly string[] TabNames = { "Games", "Media", "Store", "Friends", "News" };
     public static int LastTab = 0;
     int tab;
     StackPanel? tabsHost;
@@ -123,6 +123,10 @@ public class ConsoleRowLook : LookBase
         // right side: notification bell, clock, settings gear
         var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
         right.Children.Add(IconButton(S.PictureIcons ? PicIcon("notification") : BellIcon(), ShowNotifications));
+        var wx = Ui.Text(Weather.Text ?? "", 20, false, "#DDFFFFFF");
+        wx.Margin = new Thickness(8, 0, 4, 0); wx.IsVisible = Weather.Text != null;
+        Weather.Changed = () => Avalonia.Threading.Dispatcher.UIThread.Post(() => { wx.Text = Weather.Text ?? ""; wx.IsVisible = Weather.Text != null; });
+        right.Children.Add(wx);
         var clock = Ui.Clock();
         clock.FontSize = 26;
         clock.Margin = new Thickness(10, 0, 14, 0);
@@ -277,9 +281,50 @@ public class ConsoleRowLook : LookBase
         }
     }
 
+    int newsSel;
+
+    void ShowNews()
+    {
+        Background = Ui.B("#060A14");
+        hero.Background = Ui.Grad("#0A1A3A", "#060A14", false); hero.Effect = null; hero.Margin = new Thickness(0);
+        heroSharp.Background = null; logo.IsVisible = false; title.IsVisible = true;
+        title.Text = "News";
+        News.Changed = () => Avalonia.Threading.Dispatcher.UIThread.Post(() => { if (TabNames[tab] == "News") Refresh(); });
+        _ = News.RefreshAsync(S);
+        var list = new StackPanel { Margin = new Thickness(12, 0, 12, 0), MaxWidth = 1100, HorizontalAlignment = HorizontalAlignment.Left };
+        if (News.Items.Count == 0) { var t = Ui.Text(News.Status == "" ? "Loading..." : News.Status, 18, false, "#CCFFFFFF"); t.Margin = new Thickness(12); list.Children.Add(t); }
+        newsSel = Math.Clamp(newsSel, 0, Math.Max(News.Items.Count - 1, 0));
+        int rowsShown = Math.Max(4, (int)((Bounds.Height - 300) / 70));
+        int first = Math.Clamp(newsSel - rowsShown + 1, 0, Math.Max(News.Items.Count - rowsShown, 0));
+        for (int i = first; i < Math.Min(News.Items.Count, first + rowsShown); i++)
+        {
+            int idx = i; var it = News.Items[i]; bool on = i == newsSel;
+            var col = new StackPanel();
+            var tt = Ui.Text(it.Title, 18, true); tt.TextWrapping = TextWrapping.Wrap;
+            col.Children.Add(tt);
+            col.Children.Add(Ui.Text(it.When, 13, false, "#AAFFFFFF"));
+            var b = new Border
+            {
+                Padding = new Thickness(20, 12), Margin = new Thickness(0, 0, 0, 6), CornerRadius = new CornerRadius(12),
+                Background = Ui.B(on ? "#55408CFF" : "#33101826"), BorderBrush = Ui.B(on ? "#4C8DFF" : "#22FFFFFF"), BorderThickness = new Thickness(2), Child = col,
+                Cursor = new Cursor(StandardCursorType.Hand),
+            };
+            b.PointerPressed += (_, e) => { newsSel = idx; OpenNews(); e.Handled = true; };
+            list.Children.Add(b);
+        }
+        gridHost.Children.Add(list);
+    }
+
+    void OpenNews()
+    {
+        if (newsSel < News.Items.Count)
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(News.Items[newsSel].Link) { UseShellExecute = true }); } catch { }
+    }
+
     protected override void Refresh()
     {
         gridHost.Children.Clear();
+        if (TabNames[tab] == "News") { ShowNews(); return; }
         if (Games.Length == 0)
         {
             Background = Ui.B("#060A14");
@@ -379,6 +424,13 @@ public class ConsoleRowLook : LookBase
         if (key == Key.S || key == Key.F2) { OpenSettings?.Invoke(); return; }
         if (key == Key.PageUp || key == Key.Q) { SetTab(tab - 1); return; }
         if (key == Key.PageDown || key == Key.E) { SetTab(tab + 1); return; }
+        if (TabNames[tab] == "News")
+        {
+            if (key == Key.Down && newsSel < News.Items.Count - 1) { newsSel++; Refresh(); }
+            else if (key == Key.Up && newsSel > 0) { newsSel--; Refresh(); }
+            else if (key == Key.Enter) OpenNews();
+            return;
+        }
         if (key == Key.Y) { ToggleFavorite(); return; }
         if (Games.Length == 0) return;
         int c = Cols;

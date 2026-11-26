@@ -138,3 +138,5 @@ Fixed along the way: Program.cs startup, and RollForward=LatestMajor so it runs 
 - TODO: full controller diagram screen with live pressed inputs, app icons for top bar gear/bell, make missing icons in same style, APNG animations.
 - IGDB add-on: optional, user pastes own Twitch Client ID/Secret (Settings > Add-ons). Untested on the laptop.
 - Setup now has a "Want better game pictures?" step (Not now / Set up IGDB -> opens Settings > Add-ons). SteamGridDB still to build (paste-your-own-key, same way as IGDB).
+- Built (untested unless noted): tabs+favorites (tested), settings pop-ups (tested), game folders + in-app folder browser (opens, tested), Epic/GOG scan + store switches + setup step, SteamGridDB (needs key), button test screen (keyboard tested), generic Back/Start/L3/R3 icons, weather chip (Settings > Add-ons > Weather city), News tab (RSS, default BBC).
+- Still open: Steam achievements (needs Steam Web API key + public profile), plugin framework for Weather/News as real add-ons, CouchHUD-style restyle of the rest, check left window edge.
