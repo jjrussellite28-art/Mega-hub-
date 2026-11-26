@@ -86,12 +86,12 @@ public class HintBar : Border
                 VerticalAlignment = VerticalAlignment.Center,
                 Child = Ui.Text(g, 13, true, xbox && (h.pad == "A" || h.pad == "B") ? "#FFFFFF" : "#111111"),
             };
-            var label = Ui.Text(h.what, 22, true, "#FFFFFFFF");
+            var label = Ui.Text(h.what, 17, true, "#FFFFFFFF");
             label.Margin = new Thickness(8, 0, 0, 0);
             Control badgeOrPic = badge;
             if (pic != null)
             {
-                var im = new Image { Source = pic, Width = 64, Height = 64, VerticalAlignment = VerticalAlignment.Center };
+                var im = new Image { Source = pic, Width = 46, Height = 46, VerticalAlignment = VerticalAlignment.Center };
                 RenderOptions.SetBitmapInterpolationMode(im, Avalonia.Media.Imaging.BitmapInterpolationMode.HighQuality);
                 badgeOrPic = im;
             }

@@ -79,7 +79,7 @@ public class ConsoleRowLook : LookBase
         clock.FontSize = 26;
         clock.Margin = new Thickness(10, 0, 14, 0);
         right.Children.Add(clock);
-        Control gear = S.PictureIcons ? PicIcon("settings") : Glyph("\uE713", 34);
+        Control gear = S.PictureIcons ? PicIcon("settings") : Glyph("\uE713", 22);
         right.Children.Add(IconButton(gear, () => OpenSettings?.Invoke()));
         Grid.SetColumn(right, 2);
         bar.Children.Add(right);
@@ -128,8 +128,8 @@ public class ConsoleRowLook : LookBase
             catch { return null; }
         }
         var normal = Load(""); var hover = Load("Hover/") ?? normal; var down = Load("Pressed/") ?? normal;
-        if (normal == null) return name == "settings" ? Glyph("\uE713", 34) : BellIcon();
-        var im = new Image { Source = normal, Width = 56, Height = 56 };
+        if (normal == null) return name == "settings" ? Glyph("\uE713", 22) : BellIcon();
+        var im = new Image { Source = normal, Width = 36, Height = 36 };
         RenderOptions.SetBitmapInterpolationMode(im, Avalonia.Media.Imaging.BitmapInterpolationMode.HighQuality);
         im.PointerEntered += (_, _) => im.Source = hover;
         im.PointerExited += (_, _) => im.Source = normal;
@@ -138,7 +138,25 @@ public class ConsoleRowLook : LookBase
         return im;
     }
 
-    static Control BellIcon() => Glyph("\uEA8F", 34);
+    public static int NotificationCount = 0;
+
+    // a normal-size bell: plain white when nothing is new, bright blue with a small count badge when something is
+    static Control BellIcon()
+    {
+        var bell = Glyph("\uEA8F", 22);
+        if (NotificationCount <= 0) { bell.Foreground = Ui.B("#DDFFFFFF"); return bell; }
+        bell.Foreground = Ui.B("#4C8DFF");
+        var badge = new Border
+        {
+            Background = Ui.B("#E5484D"), CornerRadius = new CornerRadius(9), MinWidth = 18, Height = 18, Padding = new Thickness(4, 0),
+            HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, -6, -8, 0),
+            Child = Ui.Text(NotificationCount > 9 ? "9+" : NotificationCount.ToString(), 11, true),
+        };
+        var g = new Grid();
+        g.Children.Add(bell);
+        g.Children.Add(badge);
+        return g;
+    }
 
     // round icon button: glows blue when the mouse is over it
     static Border IconButton(Control icon, Action click)
@@ -241,7 +259,16 @@ public class ConsoleRowLook : LookBase
         {
             // stretched to exactly the screen: nothing cut off, no borders, works at any size
             // the game's poster itself, stretched over the whole screen so every character on it shows
-            hero.Background = GameLibrary.ArtBrush(Igdb.ArtPath(g) ?? g.CoverPath ?? path, Stretch.Fill) ?? Ui.Grad(g.C1, "#0B0F1A", false);
+            var wide = Igdb.ArtPath(g);
+            if (wide != null) hero.Background = GameLibrary.ArtBrush(wide, Stretch.UniformToFill) ?? Ui.Grad(g.C1, "#0B0F1A", false);
+            else
+            {
+                // no wide picture available: a soft blurred backdrop made from the cover, never a stretched poster
+                hero.Background = GameLibrary.ArtBrush(g.CoverPath ?? g.HeroPath) ?? Ui.Grad(g.C1, "#0B0F1A", false);
+                hero.Effect = new BlurEffect { Radius = 34 };
+                hero.Margin = new Thickness(-90);
+                dim.Background = Ui.B("#66060A14");
+            }
         }
         else if (S.Wall == WallFit.Crop)
         {
