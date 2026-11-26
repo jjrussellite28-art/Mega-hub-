@@ -96,6 +96,13 @@ public class SettingsView : Grid, IKeyHandler
                 break;
             case 2:
                 r.Add(new("Games found", GameLibrary.Info, null));
+                r.Add(new("Add a game folder", "Pick a folder with your games in it", () => { _ = AddFolder(); }));
+                foreach (var gf in s.GameFolders.ToList())
+                {
+                    var folder = gf;
+                    r.Add(new(folder, "Remove", () => { s.GameFolders.Remove(folder); s.Save(); GameLibrary.Reload(); Build(); }));
+                }
+                notes.Add(("Each game in its own folder, e.g. D:\\Games\\Retro\\Sonic. Mega Hub + finds the program that starts it. Added games show on the Games tab; closing Settings refreshes the list.", "#CCFFFFFF"));
                 break;
             case 3:
                 {
@@ -289,6 +296,23 @@ public class SettingsView : Grid, IKeyHandler
             Grid.SetRowSpan(shade, 2);
             Children.Add(shade);
         }
+    }
+
+    async System.Threading.Tasks.Task AddFolder()
+    {
+        try
+        {
+            var top = TopLevel.GetTopLevel(this);
+            if (top == null) return;
+            var res = await top.StorageProvider.OpenFolderPickerAsync(new Avalonia.Platform.Storage.FolderPickerOpenOptions { Title = "Pick the folder that holds your games", AllowMultiple = false });
+            var path = res.FirstOrDefault()?.TryGetLocalPath();
+            if (string.IsNullOrEmpty(path)) return;
+            if (!s.GameFolders.Contains(path, StringComparer.OrdinalIgnoreCase)) s.GameFolders.Add(path);
+            s.Save(); GameLibrary.Reload();
+            status.Text = "Added. Games found now: " + GameLibrary.Games.Length;
+        }
+        catch (Exception ex) { status.Text = "Could not open the folder picker: " + ex.Message; }
+        Build();
     }
 
     void Choose(int i)

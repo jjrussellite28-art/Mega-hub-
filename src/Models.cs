@@ -7,7 +7,7 @@ public enum WallFit { Fill, Crop, Fit, Cover }   // Cover = the game's cover art
 // saved as numbers, so keep this order: Wide 16:9, Short = Box cover 3:4, Poster = Steam poster 2:3, then the rest
 public enum TileShape { Wide, Short, Poster, Square, Retro, Slim, Original }
 
-public record Game(string Title, string C1, string C2, string? AppId = null, string? CoverPath = null, string? HeroPath = null, string? LogoPath = null, string? Folder = null, long SizeBytes = 0);
+public record Game(string Title, string C1, string C2, string? AppId = null, string? CoverPath = null, string? HeroPath = null, string? LogoPath = null, string? Folder = null, long SizeBytes = 0, string? Exe = null);
 
 public static class Demo
 {
@@ -40,6 +40,8 @@ public class AppSettings
     public bool PictureIcons { get; set; }
     public string PadIcons { get; set; } = "auto";
     // games the player starred (App ID, or the title when there is none)
+    // folders the player added by hand (each game in its own sub-folder)
+    public List<string> GameFolders { get; set; } = new();
     public List<string> Favorites { get; set; } = new();
     public string? IgdbId { get; set; }
     public string? IgdbSecret { get; set; }

@@ -12,7 +12,68 @@ public static class GameLibrary
     public static string Info = "Steam not checked yet.";
     static readonly Dictionary<string, Bitmap?> bitmaps = new();
 
-    public static Game[] Games => cached ??= LoadSteam();
+    static AppSettings? settings;
+    public static void Configure(AppSettings s) => settings = s;
+    public static void Reload() => cached = null;
+
+    public static Game[] Games => cached ??= LoadSteam().Concat(LoadManual()).OrderBy(g => g.Title, StringComparer.OrdinalIgnoreCase).ToArray();
+
+    static readonly string[] SkipExe = { "unins", "crash", "setup", "redist", "vc_", "dxsetup", "dotnet", "installer", "launcher_helper", "uninstall", "updater" };
+
+    // games the player pointed us to: every sub-folder with a program in it is one game (or the folder itself)
+    static IEnumerable<Game> LoadManual()
+    {
+        var list = new List<Game>();
+        if (settings == null) return list;
+        int n = 0;
+        foreach (var root in settings.GameFolders.ToList())
+        {
+            try
+            {
+                if (!Directory.Exists(root)) continue;
+                var dirs = Directory.EnumerateDirectories(root).ToList();
+                var candidates = dirs.Count > 0 ? dirs : new List<string> { root };
+                if (dirs.Count > 0 && BestExe(root, null) != null) candidates.Add(root);
+                foreach (var d in candidates)
+                {
+                    var exe = BestExe(d, Path.GetFileName(d));
+                    if (exe == null) continue;
+                    var title = Path.GetFileName(d.TrimEnd('\', '/'));
+                    if (string.IsNullOrEmpty(title)) title = Path.GetFileNameWithoutExtension(exe);
+                    var pal = Palette[(n++) % Palette.Length];
+                    long size = 0; try { size = new FileInfo(exe).Length; } catch { }
+                    list.Add(new Game(title, pal[0], pal[1], null, null, null, null, d, size, exe));
+                }
+            }
+            catch (Exception e) { AppLog.Write("manual games: " + e.Message); }
+        }
+        return list;
+    }
+
+    // the program that starts a game: one named like the folder, else the biggest one that isn't an installer or helper
+    static string? BestExe(string dir, string? name)
+    {
+        try
+        {
+            var exes = Directory.EnumerateFiles(dir, "*.exe", SearchOption.TopDirectoryOnly)
+                .Where(f => !SkipExe.Any(s => Path.GetFileName(f).Contains(s, StringComparison.OrdinalIgnoreCase))).ToList();
+            if (exes.Count == 0)
+            {
+                // some games keep it one level down (bin, game, x64)
+                foreach (var sub in Directory.EnumerateDirectories(dir).Take(8))
+                    exes.AddRange(Directory.EnumerateFiles(sub, "*.exe", SearchOption.TopDirectoryOnly)
+                        .Where(f => !SkipExe.Any(s => Path.GetFileName(f).Contains(s, StringComparison.OrdinalIgnoreCase))));
+            }
+            if (exes.Count == 0) return null;
+            if (name != null)
+            {
+                var same = exes.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).Replace(" ", "").Equals(name.Replace(" ", ""), StringComparison.OrdinalIgnoreCase));
+                if (same != null) return same;
+            }
+            return exes.OrderByDescending(f => new FileInfo(f).Length).First();
+        }
+        catch { return null; }
+    }
 
     static readonly string[][] Palette =
     {
@@ -119,8 +180,11 @@ public static class GameLibrary
 
     public static void Launch(Game g)
     {
-        if (g.AppId == null) return;
-        try { Process.Start(new ProcessStartInfo("steam://rungameid/" + g.AppId) { UseShellExecute = true }); }
-        catch { }
+        try
+        {
+            if (g.Exe != null) Process.Start(new ProcessStartInfo(g.Exe) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(g.Exe) ?? "" });
+            else if (g.AppId != null) Process.Start(new ProcessStartInfo("steam://rungameid/" + g.AppId) { UseShellExecute = true });
+        }
+        catch (Exception e) { AppLog.Write("launch failed: " + e.Message); }
     }
 }
