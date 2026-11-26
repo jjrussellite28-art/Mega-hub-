@@ -44,7 +44,7 @@ public class HintBar : Border
     // lights up the button picture for a moment when it is pressed (keyboard or controller)
     public void Flash(Avalonia.Input.Key k)
     {
-        var role = k == Avalonia.Input.Key.Enter ? "A" : k == Avalonia.Input.Key.Escape ? "B" : k == Avalonia.Input.Key.Y ? "Y" : k == Avalonia.Input.Key.S ? "≡" : null;
+        var role = k == Avalonia.Input.Key.Enter ? "A" : k == Avalonia.Input.Key.Escape ? "B" : k == Avalonia.Input.Key.Y ? "Y" : k == Avalonia.Input.Key.S ? "≡" : k == Avalonia.Input.Key.PageUp ? "LB" : k == Avalonia.Input.Key.PageDown ? "RB" : null;
         if (role == null) return;
         pressedRole = role;
         Render();
@@ -98,9 +98,9 @@ public class HintBar : Border
             var item = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 18, 0), Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand) };
             item.Children.Add(badgeOrPic);
             item.Children.Add(label);
-            if (h.pad == "A" || h.pad == "B" || h.pad == "Y" || h.pad == "≡")
+            if (h.pad == "A" || h.pad == "B" || h.pad == "Y" || h.pad == "≡" || h.pad == "LB" || h.pad == "RB")
             {
-                var key = h.pad == "A" ? Avalonia.Input.Key.Enter : h.pad == "B" ? Avalonia.Input.Key.Escape : h.pad == "Y" ? Avalonia.Input.Key.Y : Avalonia.Input.Key.S;
+                var key = h.pad == "A" ? Avalonia.Input.Key.Enter : h.pad == "B" ? Avalonia.Input.Key.Escape : h.pad == "Y" ? Avalonia.Input.Key.Y : h.pad == "LB" ? Avalonia.Input.Key.PageUp : h.pad == "RB" ? Avalonia.Input.Key.PageDown : Avalonia.Input.Key.S;
                 item.PointerPressed += (_, _) => press?.Invoke(key);
             }
             items.Children.Add(item);

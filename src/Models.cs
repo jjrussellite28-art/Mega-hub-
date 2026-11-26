@@ -39,6 +39,8 @@ public class AppSettings
     // false = the original round icons, true = the glossy picture icons for the bell and settings
     public bool PictureIcons { get; set; }
     public string PadIcons { get; set; } = "auto";
+    // games the player starred (App ID, or the title when there is none)
+    public List<string> Favorites { get; set; } = new();
     public string? IgdbId { get; set; }
     public string? IgdbSecret { get; set; }
 

@@ -54,6 +54,8 @@ public static class PadIcons
         ["B"] = new[] { "b", "circle", "escape", "two" },
         ["Y"] = new[] { "y", "triangle" },
         ["≡"] = new[] { "settings" },
+        ["LB"] = new[] { "lb", "l1", "l", "zl" },
+        ["RB"] = new[] { "rb", "r1", "r", "zr" },
     };
 
     static readonly Dictionary<string, Bitmap?> cache = new();

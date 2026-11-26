@@ -48,7 +48,7 @@ public static class Ui
         }
     }
 
-    public static Border Tile(Game g, TileShape shape, bool selected, string glow)
+    public static Border Tile(Game g, TileShape shape, bool selected, string glow, bool fav = false)
     {
         var (w, h) = Size(shape, g);
         if (selected) { w *= 1.1; h *= 1.1; }
@@ -84,6 +84,15 @@ public static class Ui
             label.VerticalAlignment = VerticalAlignment.Bottom;
             label.Margin = new Thickness(8);
             tile.Child = label;
+        }
+        if (fav)
+        {
+            var star = Text("★", 22, true, "#FFD54A");
+            star.HorizontalAlignment = HorizontalAlignment.Right; star.VerticalAlignment = VerticalAlignment.Top; star.Margin = new Thickness(0, 4, 8, 0);
+            var host = new Grid();
+            if (tile.Child != null) { var old = tile.Child; tile.Child = null; host.Children.Add(old); }
+            host.Children.Add(star);
+            tile.Child = host;
         }
         return tile;
     }
@@ -133,7 +142,7 @@ public abstract class LookBase : Grid, IKeyHandler
 {
     protected readonly AppSettings S;
     protected int Sel;
-    protected readonly Game[] Games = GameLibrary.Games;
+    protected Game[] Games = GameLibrary.Games;
     public Action? OpenSettings;
 
     protected LookBase(AppSettings s) { S = s; }

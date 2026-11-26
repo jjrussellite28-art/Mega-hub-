@@ -16,6 +16,50 @@ public class ConsoleRowLook : LookBase
     readonly Border hero = new();       // blurred copy fills the whole screen
     readonly Border heroSharp = new();  // the whole picture, nothing cut off
     int top;                       // first visible row of the poster grid
+    static readonly string[] TabNames = { "Favorites", "Games", "Media", "Store", "Friends" };
+    public static int LastTab = 1;
+    int tab;
+    StackPanel? tabsHost;
+
+    static string FavKey(Game g) => g.AppId ?? g.Title;
+    bool IsFav(Game g) => S.Favorites.Contains(FavKey(g));
+
+    // which games the current tab shows (Media, Store and Friends have nothing behind them yet)
+    void ApplyTab()
+    {
+        Games = tab == 0 ? GameLibrary.Games.Where(IsFav).ToArray() : tab == 1 ? GameLibrary.Games : Array.Empty<Game>();
+    }
+
+    void BuildTabs()
+    {
+        if (tabsHost == null) return;
+        tabsHost.Children.Clear();
+        for (int i = 0; i < TabNames.Length; i++)
+        {
+            int idx = i;
+            var pill = Ui.Pill(TabNames[i], i == tab ? "#33FFFFFF" : "#00000000", i == tab ? "#FFFFFF" : "#CCFFFFFF", 18);
+            pill.Cursor = new Cursor(StandardCursorType.Hand);
+            pill.PointerPressed += (_, e) => { SetTab(idx); e.Handled = true; };
+            tabsHost.Children.Add(pill);
+        }
+    }
+
+    void SetTab(int i)
+    {
+        if (i < 0 || i >= TabNames.Length || i == tab) return;
+        tab = i; LastTab = i; LastSel = 0; Sel = 0; top = 0;
+        ApplyTab(); BuildTabs(); Refresh();
+    }
+
+    void ToggleFavorite()
+    {
+        if (Games.Length == 0) return;
+        var g = Games[Sel]; var k = FavKey(g);
+        if (!S.Favorites.Remove(k)) S.Favorites.Add(k);
+        S.Save();
+        if (tab == 0) { ApplyTab(); Sel = Math.Clamp(Sel, 0, Math.Max(Games.Length - 1, 0)); }
+        Refresh();
+    }
     bool menuOpen;
     int menuIdx;
     Control? overlay;
@@ -23,6 +67,8 @@ public class ConsoleRowLook : LookBase
 
     public ConsoleRowLook(AppSettings s) : base(s)
     {
+        tab = LastTab;
+        ApplyTab();
         Sel = Math.Clamp(LastSel, 0, Math.Max(Games.Length - 1, 0));
         RowDefinitions = new RowDefinitions("Auto,*,Auto");
         SizeChanged += (_, _) => Refresh();
@@ -65,9 +111,8 @@ public class ConsoleRowLook : LookBase
 
         var bar = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto") };
         var tabs = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(28, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
-        tabs.Children.Add(Ui.Pill("Games", "#33FFFFFF", "#FFFFFF", 18));
-        foreach (var t in new[] { "Media", "Store", "Friends" })
-            tabs.Children.Add(Ui.Pill(t, "#00000000", "#CCFFFFFF", 18));
+        tabsHost = tabs;
+        BuildTabs();
         bar.Children.Add(Ui.Text("Mega Hub +", 24, true));
         Grid.SetColumn(tabs, 1);
         bar.Children.Add(tabs);
@@ -237,7 +282,8 @@ public class ConsoleRowLook : LookBase
             Background = Ui.B("#060A14");
             hero.Background = null;
             heroSharp.Background = null;
-            title.Text = "No games found"; title.IsVisible = true; logo.IsVisible = false;
+            title.Text = tab == 0 ? "No favorites yet. Press Y on a game to add it." : tab == 1 ? "No games found" : TabNames[tab] + " is coming soon";
+            title.IsVisible = true; logo.IsVisible = false;
             return;
         }
         var g = Games[Sel];
@@ -307,7 +353,7 @@ public class ConsoleRowLook : LookBase
             {
                 int i = r * cols + c;
                 if (i >= Games.Length) break;
-                var tile = Ui.Tile(Games[i], S.Shape, i == Sel, "#3FE0D0");
+                var tile = Ui.Tile(Games[i], S.Shape, i == Sel, "#3FE0D0", IsFav(Games[i]));
                 tile.PointerPressed += (_, _) => { Sel = i; Refresh(); OpenMenu(); };
                 line.Children.Add(tile);
             }
@@ -320,6 +366,9 @@ public class ConsoleRowLook : LookBase
         if (notifOpen) { if (key == Key.Escape || key == Key.Enter) CloseNotifications(); return; }
         if (menuOpen) { MenuKey(key); return; }
         if (key == Key.S || key == Key.F2) { OpenSettings?.Invoke(); return; }
+        if (key == Key.PageUp || key == Key.Q) { SetTab(tab - 1); return; }
+        if (key == Key.PageDown || key == Key.E) { SetTab(tab + 1); return; }
+        if (key == Key.Y) { ToggleFavorite(); return; }
         if (Games.Length == 0) return;
         int c = Cols;
         switch (key)
