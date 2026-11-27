@@ -3,6 +3,17 @@
 Last updated: 2026-11-24. It builds and runs on Jake's Windows laptop.
 Fixed along the way: Program.cs startup, and RollForward=LatestMajor so it runs on the installed .NET.
 
+## Beta 0.1 release target
+
+**Goal:** Get a usable Windows beta into the hands of a small group so they can try Mega Hub Plus, suggest improvements, and tell us whether they would use it again on their TV or PC.
+
+- [ ] Finish the Windows Game Row and full game page. Verify that the library still works when artwork is missing.
+- [ ] On a real Windows PC in App Mode, find an installed Steam game, open its details, launch it, exit it, and return to Mega Hub Plus. Repeat with a physical controller and verify that getting back to the Windows desktop is easy.
+- [ ] Check the installer or release ZIP on a fresh Windows setup. Include short release notes with tested game stores, controls, known issues, and a way to send feedback.
+- [ ] Ask testers where they got stuck, whether they would use it again, and what one change would make the biggest difference.
+
+Media features and broader store integrations can follow after the first tester build. Jake decides when Beta 0.1 is ready to share.
+
 ## Built and TESTED (Claude, on the laptop)
 - Builds and opens from "Run Mega Hub +.bat"
 - Startup picker shows three looks, click picks one
