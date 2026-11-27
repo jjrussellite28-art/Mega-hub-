@@ -230,13 +230,15 @@ public static class GameLibrary
         return bmp == null ? null : new ImageBrush(bmp) { Stretch = stretch, AlignmentY = stretch == Stretch.Uniform ? AlignmentY.Top : AlignmentY.Center, AlignmentX = AlignmentX.Center };
     }
 
-    public static void Launch(Game g)
+    public static bool Launch(Game g)
     {
         try
         {
             if (g.Exe != null) Process.Start(new ProcessStartInfo(g.Exe) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(g.Exe) ?? "" });
             else if (g.AppId != null) Process.Start(new ProcessStartInfo("steam://rungameid/" + g.AppId) { UseShellExecute = true });
+            else return false;
+            return true;
         }
-        catch (Exception e) { AppLog.Write("launch failed: " + e.Message); }
+        catch (Exception e) { AppLog.Write("launch failed: " + e.Message); return false; }
     }
 }

@@ -80,6 +80,15 @@ public class MainWindow : Window
 
     void ShowLook()
     {
+        if (st.Layout == HomeLayout.GameRow)
+        {
+            var row = new GameRowLook(st);
+            row.OpenSettings = ShowSettings;
+            row.OpenGame = ShowGame;
+            Content = row;
+            hints.Set(("A", "Enter", "Open"), ("Y", "Y", "Favorite"));
+            return;
+        }
         LookBase look = new ConsoleRowLook(st);
         look.OpenSettings = ShowSettings;
         if (look is ConsoleRowLook c0) c0.OpenGame = ShowGame;
@@ -92,7 +101,8 @@ public class MainWindow : Window
 
     void ShowGame(Game g)
     {
-        Content = new GameView(g, ShowLook, hints);
+        if (st.Layout == HomeLayout.GameRow) Content = new GameRowPage(g, st, ShowLook, hints);
+        else Content = new GameView(g, ShowLook, hints);
     }
 
     void ShowSetup()

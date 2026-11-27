@@ -124,6 +124,7 @@ public class SettingsView : Grid, IKeyHandler
         {
             case 0:
                 var wi = Array.FindIndex(Walls, w => w.v == s.Wall);
+                r.Add(Pick("Home layout", new[] { "Dashboard (tabs and poster grid)", "Game Row (one row, big title)" }, (int)s.Layout, i => { s.Layout = (HomeLayout)i; s.Save(); }));
                 r.Add(Pick("Wallpaper", Walls.Select(w => w.name).ToArray(), Math.Max(wi, 0), i => { s.Wall = Walls[i].v; s.Save(); }));
                 var si = Array.FindIndex(Shapes, w => w.v == s.Shape);
                 r.Add(Pick("Tile shape", Shapes.Select(w => w.name).ToArray(), Math.Max(si, 0), i => { s.Shape = Shapes[i].v; s.Save(); }));

@@ -3,6 +3,8 @@ using System.Text.Json;
 namespace MegaHubPlus;
 
 public enum LookKind { ConsoleRow, Blades, WideHome }
+// saved as a number: Dashboard = the original home, GameRow = the one-row layout
+public enum HomeLayout { Dashboard, GameRow }
 public enum WallFit { Fill, Crop, Fit, Cover }   // Cover = the game's cover art, softly blurred, full screen   // wallpaper: stretch to the screen, crop to the screen, or show whole picture
 // saved as numbers, so keep this order: Wide 16:9, Short = Box cover 3:4, Poster = Steam poster 2:3, then the rest
 public enum TileShape { Wide, Short, Poster, Square, Retro, Slim, Original }
@@ -42,6 +44,9 @@ public class AppSettings
     // games the player starred (App ID, or the title when there is none)
     // folders the player added by hand (each game in its own sub-folder)
     // which game stores to look in
+    public HomeLayout Layout { get; set; } = HomeLayout.GameRow;
+    // per game: 0 = show the whole background picture, 1 = fill the screen (crop edges)
+    public Dictionary<string, int> GameFit { get; set; } = new();
     public bool UseSteam { get; set; } = true;
     public bool UseEpic { get; set; } = true;
     public bool UseGog { get; set; } = true;

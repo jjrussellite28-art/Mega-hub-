@@ -124,7 +124,7 @@ public class GameView : Grid, IKeyHandler
     record Store(string? Desc, string? Dev, string? Pub, string? Date, string? Genres, string? Esrb = null);
 
     // last played and play time come from Steam's own file for the signed-in account
-    (DateTime? last, int minutes) PlayInfo()
+    internal static (DateTime? last, int minutes) PlayInfo(Game g)
     {
         try
         {
@@ -150,7 +150,7 @@ public class GameView : Grid, IKeyHandler
         info.Children.Clear();
         if (st?.Esrb != null)
             info.Children.Add(new Border { Background = Brushes.Transparent, BorderBrush = Brushes.White, BorderThickness = new Thickness(2), CornerRadius = new CornerRadius(5), Padding = new Thickness(10, 2), HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 6), Child = Ui.Text("ESRB " + st.Esrb, 15, true) });
-        var (last, mins) = PlayInfo();
+        var (last, mins) = PlayInfo(g);
         if (g.AppId != null)
         {
             var days = last == null ? -1 : (int)(DateTime.Now.Date - last.Value.Date).TotalDays;
