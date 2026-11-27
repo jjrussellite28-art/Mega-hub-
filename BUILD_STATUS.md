@@ -151,3 +151,10 @@ Media features and broader store integrations can follow after the first tester 
 - Setup now has a "Want better game pictures?" step (Not now / Set up IGDB -> opens Settings > Add-ons). SteamGridDB still to build (paste-your-own-key, same way as IGDB).
 - Built (untested unless noted): tabs+favorites (tested), settings pop-ups (tested), game folders + in-app folder browser (opens, tested), Epic/GOG scan + store switches + setup step, SteamGridDB (needs key), button test screen (keyboard tested), generic Back/Start/L3/R3 icons, weather chip (Settings > Add-ons > Weather city), News tab (RSS, default BBC).
 - Still open: Steam achievements (needs Steam Web API key + public profile), plugin framework for Weather/News as real add-ons, CouchHUD-style restyle of the rest, check left window edge.
+
+## Game Row layout (Nov 27) - built, NOT yet tested on the laptop
+- Settings > Appearance > Home layout: Game Row (new default) or Dashboard (old, kept).
+- GameRowLook (one row of 2:3 covers, title, 2 s delayed backdrop reveal via GameRowReveal), GameRowPage (Play / Settings / Info, background fit saved per game).
+- Home looked right in the running app; opening a game crashed (bad colour code), fixed in 3be4bc2, not yet seen running.
+- Needs a first look: game page, Settings panel (fit), Info panel, Y favorite, hover select, LB/RB (not used in this layout), backdrop crossfade.
+- Not in Game Row yet: Media/Store/Friends/News tabs and the bell (still in Dashboard layout), "Choose background" manual art.
