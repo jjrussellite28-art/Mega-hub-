@@ -91,7 +91,7 @@ public class GameRowPage : Grid, IKeyHandler
         // bottom: cover + source
         var dock = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 14, VerticalAlignment = VerticalAlignment.Bottom };
         if (GameLibrary.LoadBitmap(g.CoverPath) is { } thumb)
-            dock.Children.Add(new Border { Width = 48, Height = 72, CornerRadius = new CornerRadius(6), BorderBrush = Ui.B("#66963B7DC"), BorderThickness = new Thickness(1), ClipToBounds = true, Child = new Image { Source = thumb, Stretch = Stretch.Uniform } });
+            dock.Children.Add(new Border { Width = 48, Height = 72, CornerRadius = new CornerRadius(6), BorderBrush = Ui.B("#6696B7DC"), BorderThickness = new Thickness(1), ClipToBounds = true, Child = new Image { Source = thumb, Stretch = Stretch.Uniform } });
         var src = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         var srcName = g.AppId != null ? "Steam" : g.Folder != null && g.Folder.Contains("Epic", StringComparison.OrdinalIgnoreCase) ? "Epic Games" : g.Exe != null ? "Added by you" : "PC";
         src.Children.Add(Ui.Text(srcName, 16, true)); src.Children.Add(Ui.Text("PC game", 14, false, "#AFC5E3"));
@@ -101,7 +101,6 @@ public class GameRowPage : Grid, IKeyHandler
         Children.Add(page);
 
         // order for the controller: Back, Play, Settings, Info (then the fit button when Settings is open)
-        items.Insert(0, (backBtn, back));
         RefreshFit(); FocusRing();
         FillInfo(null);
         genre.Text = "";
